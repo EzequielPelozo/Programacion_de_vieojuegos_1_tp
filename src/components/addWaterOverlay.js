@@ -3,7 +3,7 @@ import { Texture, TilingSprite } from 'pixi.js';
 // Reference to the water overlay.
 let overlay;
 
-export function addWaterOverlay(app)
+export function addWaterOverlay(game)
 {
     // Create a water texture object.
     const texture = Texture.from('overlay');
@@ -11,12 +11,12 @@ export function addWaterOverlay(app)
     // Create a tiling sprite with the water texture and specify the dimensions.
     overlay = new TilingSprite({
         texture,
-        width: app.screen.width,
-        height: app.screen.height,
+        width: game.app.screen.width,
+        height: game.app.screen.height,
     });
 
-    // Add the overlay to the stage.
-    app.stage.addChild(overlay);
+    // Add the overlay to the main container.
+    game.mainContainer.addChild(overlay);
 }
 
 export function animateWaterOverlay(app, time)

@@ -4,6 +4,7 @@ import { addWaterOverlay, animateWaterOverlay } from '../components/addWaterOver
 import { addDisplacementEffect } from '../components/addDisplacementEffect.js'
 import { Player } from './Player.js';  // Importamos la clase Player 
 import { Fish } from './Fish.js';  // Importa la clase Fish
+import { lerp } from '../components/Utils.js'
 
 // Imagenes
 import backgroundImage from '../sprites/sea_background_1.png'; // Usa la ruta relativa
@@ -24,8 +25,11 @@ export class Game {
         // Si no existe, inicializar la instancia
         console.log('Game Init');
         this.app = new PIXI.Application();
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
+        this.width = window.innerWidth * 4;
+        this.height = window.innerHeight * 4;
+        this.escale = 1
+
+        this.mainContainer = new PIXI.Container();
 
         this.player = null;
         this.fishes = [];
@@ -40,9 +44,12 @@ export class Game {
             // Esperar que los recursos se carguen antes de añadir el fondo
             await this.preload();
             
+            this.mainContainer.name = "contenedorPrincipal";
+            this.app.stage.addChild(this.mainContainer);
+            
             // Cargar el Fondo
-            addBackground(this.app);
-            addWaterOverlay(this.app);
+            addBackground(this);
+            addWaterOverlay(this);
             addDisplacementEffect(this.app);
 
             // Cargo el Player 
@@ -62,6 +69,7 @@ export class Game {
         Game.instance = this;
     }
     gameLoop(time) {
+        
         // Actualizar el jugador        
         this.player.update(time);
          // Actualizar cada pez
@@ -70,6 +78,9 @@ export class Game {
         }
         // Animar el overlay de agua
         animateWaterOverlay(this.app, time);
+
+        // Camara sigue personaje
+        this.moveCamera();        
     }
 
     async preload() {
@@ -92,10 +103,17 @@ export class Game {
         }
     }
 
+    moveCamera() {
 
+        // El valor objetivo de la cámara, centrado en el jugador
+        let targetX = -this.player.x + window.innerWidth / 2;
+        let targetY = -this.player.y + window.innerHeight / 2;
+
+        // Suavizar el movimiento usando lerp
+        this.mainContainer.x = lerp(this.mainContainer.x, targetX, 0.1);
+        this.mainContainer.y = lerp(this.mainContainer.y, targetY, 0.1);
+
+        // Ajustar la escala si es necesario
+        this.mainContainer.scale.set(this.escale);
+    }
 }
-
-
-
-
-// Inverstigar: steering behabiors, p5.js(Para vectores), boids cohesion codeopen boids

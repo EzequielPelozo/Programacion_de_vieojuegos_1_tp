@@ -11,7 +11,7 @@ export class Entity2D {
         this.rotationSpeed = 0.1;                           // Velocidad de rotación
         this.speed = 0;                                     // Velocidad de desplazamiento inicial
         this.acceleration = 0.2;                            // Aceleración para aumentar/disminuir la velocidad
-        this.maxSpeed = 8;                                  // Velocidad máxima de la entidad
+        this.maxSpeed = 10;                                  // Velocidad máxima de la entidad
         this.friction = 0.98;                               // Factor de fricción para reducir la velocidad gradualmente         
         this.listo = false;
         this.sprite = null;
@@ -35,7 +35,7 @@ export class Entity2D {
         this.sprite = PIXI.Sprite.from(image);
 
         // Add to stage.
-        this.game.app.stage.addChild(this.sprite);
+        this.game.mainContainer.addChild(this.sprite);
 
         // Center the sprite's anchor point.
         this.sprite.anchor.set(0.5);  
@@ -72,15 +72,33 @@ export class Entity2D {
     // Método para hacer que el sprite reaparezca al salir de la pantalla (pantalla envolvente)
     wrapAroundScreen() {
         if (this.sprite.x < 0) {
-            this.sprite.x = this.game.app.screen.width;
-        } else if (this.sprite.x > this.game.app.screen.width) {
+            this.sprite.x = this.game.width; 
+        } else if (this.sprite.x > this.game.width) {
             this.sprite.x = 0;
         }
 
         if (this.sprite.y < 0) {
-            this.sprite.y = this.game.app.screen.height;
-        } else if (this.sprite.y > this.game.app.screen.height) {
+            this.sprite.y = this.game.height;
+        } else if (this.sprite.y > this.game.height) {
             this.sprite.y = 0;
+        }
+    }
+
+    // Método para cambiar la dirección al colisionar con los bordes de la pantalla
+    bounceOnEdges(time) {
+
+        // Calcular el desplazamiento en los ejes X e Y basado en la velocidad y rotación
+        const dy = Math.cos(this.sprite.rotation)          //* this.speed;  Direccion en X
+        const dx = Math.sin(this.sprite.rotation)          //* this.speed;  Direccion en Y  
+
+        // Colisión con los bordes izquierdo o derecho
+        if (this.sprite.x <= 0 || this.sprite.x >= this.game.width) {
+            this.sprite.x -= dx * this.speed * time.deltaTime
+        }
+
+        // Colisión con los bordes superior o inferior
+        if (this.sprite.y <= 0 || this.sprite.y >= this.game.height) {
+            this.sprite.y += dy * this.speed * time.deltaTime
         }
     }
 }

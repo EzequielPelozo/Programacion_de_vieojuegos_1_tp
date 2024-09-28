@@ -22,7 +22,9 @@ export class Player extends Entity2D {
         // this.checkCollisions();
 
         // Hacer que el sprite reaparezca al salir de la pantalla (efecto de pantalla envolvente)
-        this.wrapAroundScreen();
+        // this.wrapAroundScreen();
+        // Hacer que el sprite no pase de la pantalla
+        this.bounceOnEdges(delta);
         
         // Aplicar fricción para que la velocidad se reduzca gradualmente
         this.speed *= this.friction;
@@ -55,16 +57,16 @@ export class Player extends Entity2D {
 
     checkKeys(delta) {
         // Controlar rotación y aceleración basado en las teclas presionadas
-        if (this.keys['ArrowLeft']) {
+        if (this.keys['KeyA']) {
             this.sprite.rotation -= this.rotationSpeed * delta.deltaTime;
         }
-        if (this.keys['ArrowRight']) {
+        if (this.keys['KeyD']) {
             this.sprite.rotation += this.rotationSpeed * delta.deltaTime;
         }
-        if (this.keys['ArrowUp']) {
+        if (this.keys['KeyW']) {
             this.speed = Math.min(this.speed + this.acceleration, this.maxSpeed);
         }
-        if (this.keys['ArrowDown']) {
+        if (this.keys['KeyS']) {
             this.speed = Math.max(this.speed - this.acceleration, 0); // Evitar velocidad negativa
         }
         if (this.keys['Space']) {
