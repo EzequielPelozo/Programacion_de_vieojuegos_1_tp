@@ -7,10 +7,13 @@ export class Player extends Entity2D {
 
         this.name = "Player";
 
-        this.keys = {}; // Objeto para manejar el estado de las teclas
+        this.keys = {}; // Objeto para manejar el estado de las teclas  
+        
+        this.isFiring = false;   // Controlar si ya se disparó el eco
 
         window.addEventListener('keydown', this.onKeyDown.bind(this)); // Configurar los eventos del teclado
         window.addEventListener('keyup', this.onKeyUp.bind(this));
+        
     }   
 
     update(delta) {
@@ -53,6 +56,11 @@ export class Player extends Entity2D {
     // Evento para cuando una tecla se suelta
     onKeyUp(event) {
         this.keys[event.code] = false; // Marca la tecla como no presionada
+
+        // Cuando se suelte la tecla "M", permitir disparar de nuevo SI CAMBIO TECLA DE DISPARO CAMBIAR
+        if (event.code === 'KeyM') {
+            this.isFiring = false;  // Reiniciar el estado de disparo
+        }
     }
 
     checkKeys(delta) {
@@ -69,9 +77,13 @@ export class Player extends Entity2D {
         if (this.keys['KeyS']) {
             this.speed = Math.max(this.speed - this.acceleration, 0); // Evitar velocidad negativa
         }
-        if (this.keys['Space']) {
-            // TODO:
-            console.log('Space');
+        if (this.keys['KeyM']) {
+             // Solo disparar si no se está disparando
+             if (!this.isFiring) {
+                this.isFiring = true; // Marcar que se está disparando
+                const { x, y, rotation } = this.sprite;
+                this.game.echoPool.getEcho(x, y, rotation); // Disparar el eco
+            }
         }
     }
 }

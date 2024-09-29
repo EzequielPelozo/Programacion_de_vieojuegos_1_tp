@@ -2,17 +2,18 @@ import * as PIXI from 'pixi.js';
 import { addBackground } from '../components/addBackground.js'
 import { addWaterOverlay, animateWaterOverlay } from '../components/addWaterOverlay.js'
 import { addDisplacementEffect } from '../components/addDisplacementEffect.js'
-import { Player } from './Player.js';  // Importamos la clase Player 
-import { Fish } from './Fish.js';  // Importa la clase Fish
+import { Player } from './Player.js';                             // Importamos la clase Player 
+import { Fish } from './Fish.js';                                 // Importa la clase Fish
 import { lerp } from '../components/Utils.js'
+import { EchoPool } from "./EchoPool";
 
 // Imagenes
-import backgroundImage from '../sprites/sea_background_1.png'; // Usa la ruta relativa
-import waveOverlay from '../sprites/wave_overlay.png';         // Usa la ruta relativa
-import displacementMap from '../sprites/displacement_map.png'; // Usa la ruta relativa
-import PlayerImage from '../sprites/dopphin_top_view_ph.png';  // Usa la ruta relativa
-import FishImage from '../sprites/fish_1_ph.png';              // Usa la ruta relativa
-
+import backgroundImage from '../sprites/sea_background_1.png';     // Usa la ruta relativa
+import waveOverlay     from '../sprites/wave_overlay.png';         // Usa la ruta relativa
+import displacementMap from '../sprites/displacement_map.png';     // Usa la ruta relativa
+import PlayerImage     from '../sprites/dopphin_top_view_ph.png';  // Usa la ruta relativa
+import FishImage       from '../sprites/fish_1_ph.png';            // Usa la ruta relativa
+import Echo            from '../sprites/echolocation.png';         // Usa la ruta relativa
 export class Game {    
     // Propiedad estática que contendrá la única instancia de la clase (Singleton)
     static instance = null;
@@ -33,7 +34,8 @@ export class Game {
 
         this.player = null;
         this.fishes = [];
-        this.fishCount = 30;
+        this.fishCount = 600;
+        this.echoCount = 10;
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -52,9 +54,12 @@ export class Game {
             addWaterOverlay(this);
             addDisplacementEffect(this.app);
 
+            // Instanciar el EcoPool 
+            this.echoPool = new EchoPool(this, this.echoCount);
+
             // Cargo el Player 
             this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this);  
-            
+
             // Cargo Peces
             this.startFishes();
             // console.log(this.fishes)
@@ -79,6 +84,9 @@ export class Game {
         // Animar el overlay de agua
         animateWaterOverlay(this.app, time);
 
+        // Actualizar todas los ecos activos del pool
+        this.echoPool.update(time);
+
         // Camara sigue personaje
         this.moveCamera();        
     }
@@ -89,7 +97,8 @@ export class Game {
             { alias: 'overlay', src: waveOverlay },
             { alias: 'displacement', src: displacementMap },  
             { alias: 'fish', src: FishImage },               
-            { alias: 'player', src: PlayerImage },                  
+            { alias: 'player', src: PlayerImage }, 
+            { alias: 'echo', src: Echo },                 
         ];
     
         // Usamos `PIXI.Assets.load` para cargar todos los recursos

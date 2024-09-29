@@ -34,7 +34,7 @@ export class Entity2D {
         // Crear un sprite usando el alias de la image cargada 
         this.sprite = PIXI.Sprite.from(image);
 
-        // Add to stage.
+        // Add to main container. ¿deberia crear un container por sprite?
         this.game.mainContainer.addChild(this.sprite);
 
         // Center the sprite's anchor point.

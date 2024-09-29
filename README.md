@@ -1,5 +1,5 @@
 
-
+# Controles Provisorios: WASD(mover) y M(eco)
 ### A continuación te mostraré cómo configurar tu proyecto con Vite (una opción más moderna y fácil de usar). **Importante: Si descargaste el proyecto desde el repo no olvides ejecutar el npm install para descargar los modulos de Node**
 
 ## Usar Vite para servir tu proyecto
