@@ -6,15 +6,17 @@ import { Player } from './Player.js';                             // Importamos 
 import { Fish } from './Fish.js';                                 // Importa la clase Fish
 import { lerp } from '../components/Utils.js'
 import { EchoPool } from "./EchoPool";
+import { Predator } from './Predator.js';
 
 // Imagenes
 import backgroundImage from '../sprites/sea_background_1.png';     // Usa la ruta relativa
-import waveOverlay     from '../sprites/wave_overlay.png';         // Usa la ruta relativa
+import waveOverlay from '../sprites/wave_overlay.png';         // Usa la ruta relativa
 import displacementMap from '../sprites/displacement_map.png';     // Usa la ruta relativa
-import PlayerImage     from '../sprites/dopphin_top_view_ph.png';  // Usa la ruta relativa
-import FishImage       from '../sprites/fish_1_ph.png';            // Usa la ruta relativa
-import Echo            from '../sprites/echolocation.png';         // Usa la ruta relativa
-export class Game {    
+import PlayerImage from '../sprites/dopphin_top_view_ph.png';  // Usa la ruta relativa
+import FishImage from '../sprites/fish_1_ph.png';            // Usa la ruta relativa
+import Echo from '../sprites/echolocation.png';         // Usa la ruta relativa
+import SharkImage from '../sprites/shark-tv.png';             // Usa la ruta relativa
+export class Game {
     // Propiedad estática que contendrá la única instancia de la clase (Singleton)
     static instance = null;
 
@@ -36,6 +38,7 @@ export class Game {
         this.fishes = [];
         this.fishCount = 600;
         this.echoCount = 10;
+        this.predator = null;
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -45,10 +48,10 @@ export class Game {
 
             // Esperar que los recursos se carguen antes de añadir el fondo
             await this.preload();
-            
+
             this.mainContainer.name = "contenedorPrincipal";
             this.app.stage.addChild(this.mainContainer);
-            
+
             // Cargar el Fondo
             addBackground(this);
             addWaterOverlay(this);
@@ -58,29 +61,34 @@ export class Game {
             this.echoPool = new EchoPool(this, this.echoCount);
 
             // Cargo el Player 
-            this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this);  
+            this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this);
 
             // Cargo Peces
             this.startFishes();
             // console.log(this.fishes)
-            
+
+            //Cargo predator
+            this.predator = new Predator(Math.random() * this.width, Math.random() * this.height, 'shark', this)
+
             this.app.ticker.add((time) => {
                 // Lógica del juego aquí
                 this.gameLoop(time);
-            });            
+            });
         });
 
         // Asignar la instancia actual a la propiedad estática
         Game.instance = this;
     }
     gameLoop(time) {
-        
+
         // Actualizar el jugador        
         this.player.update(time);
-         // Actualizar cada pez
-         for (let fish of this.fishes) {
+        // Actualizar cada pez
+        for (let fish of this.fishes) {
             fish.update(time, this.fishes, this.player);
         }
+        // Actualiza el depredador
+        this.predator.update(time, this.player);
         // Animar el overlay de agua
         animateWaterOverlay(this.app, time);
 
@@ -88,23 +96,24 @@ export class Game {
         this.echoPool.update(time);
 
         // Camara sigue personaje
-        this.moveCamera();        
+        this.moveCamera();
     }
 
     async preload() {
         const assets = [
             { alias: 'background', src: backgroundImage },
             { alias: 'overlay', src: waveOverlay },
-            { alias: 'displacement', src: displacementMap },  
-            { alias: 'fish', src: FishImage },               
-            { alias: 'player', src: PlayerImage }, 
-            { alias: 'echo', src: Echo },                 
+            { alias: 'displacement', src: displacementMap },
+            { alias: 'fish', src: FishImage },
+            { alias: 'player', src: PlayerImage },
+            { alias: 'echo', src: Echo },
+            { alias: 'shark', src: SharkImage }
         ];
-    
+
         // Usamos `PIXI.Assets.load` para cargar todos los recursos
         await PIXI.Assets.load(assets);
-    } 
-    
+    }
+
     startFishes() {
         for (let i = 0; i < this.fishCount; i++) {
             const fish = new Fish(Math.random() * this.width, Math.random() * this.height, 'fish', this);
