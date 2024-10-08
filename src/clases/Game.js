@@ -65,7 +65,6 @@ export class Game {
 
             // Cargo Peces
             this.startFishes();
-            // console.log(this.fishes)
 
             //Cargo predator
             this.predator = new Predator(Math.random() * this.width, Math.random() * this.height, 'shark', this)
@@ -97,6 +96,23 @@ export class Game {
 
         // Camara sigue personaje
         this.moveCamera();
+
+        //si colisionan vuelve al player al medio de la pantalla
+        if (this.checkCollideOfSprites(this.player, this.predator)) {
+            this.player.sprite.x = (this.app.screen.width / 2)
+            this.player.sprite.y = (this.app.screen.height / 2)
+
+            this.player.x = (this.app.screen.width / 2)
+            this.player.y = (this.app.screen.width / 2)
+        }
+
+        //si colisionan se le aplica una desaceleracion a al predador y una velocidad = 0
+        for (let echo of this.echoPool.echoes) {
+            if (this.checkCollideOfSprites(this.predator, echo)) {
+                this.predator.acceleration.set({ x: -2, y: -2 });
+                this.predator.velocity = ({ x: 0, y: 0 });
+            }
+        }
     }
 
     async preload() {
@@ -133,5 +149,20 @@ export class Game {
 
         // Ajustar la escala si es necesario
         this.mainContainer.scale.set(this.escale);
+    }
+
+    //Chequeo si colisionan dos entidades (aplica para el predador y el player, el predador y el echo, etc)
+    checkCollideOfSprites(entity1, entity2) {
+
+        const rect1 = entity1.sprite.getBounds();
+        const rect2 = entity2.sprite.getBounds();
+        //quiza se pueda optimizar mejor ya que hay veces que no se hace correctamente la colision
+        return (
+            //divido el ancho y el alto a la mitad porque sino la "caja" de colision es muy grande y los sprites ni se tocan y lo toma como colision.
+            rect1.x < rect2.x + (rect2.width / 2) &&
+            rect1.x + (rect1.width / 2) > rect2.x &&
+            rect1.y < rect2.y + (rect2.height / 2) &&
+            rect1.y + (rect1.height / 2) > rect2.y
+        );
     }
 }
