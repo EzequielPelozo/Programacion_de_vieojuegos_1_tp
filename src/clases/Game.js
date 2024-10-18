@@ -39,6 +39,9 @@ export class Game {
         this.fishCount = 600;
         this.echoCount = 10;
         this.predator = null;
+        this.timeText = null;
+        this.startTime = 0; // Tiempo de inicio
+        this.totalSeconds = 0; // Tiempo total en segundos
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -69,11 +72,16 @@ export class Game {
             //Cargo predator
             this.predator = new Predator(Math.random() * this.width, Math.random() * this.height, 'shark', this)
 
+            //Cargo el timer al final para que este en la ultima capa
+            this.createUI();
+
             this.app.ticker.add((time) => {
                 // Lógica del juego aquí
                 this.gameLoop(time);
             });
         });
+
+
 
         // Asignar la instancia actual a la propiedad estática
         Game.instance = this;
@@ -97,6 +105,7 @@ export class Game {
         // Camara sigue personaje
         this.moveCamera();
 
+
         //si colisionan vuelve al player al medio de la pantalla
         if (this.checkCollideOfSprites(this.player, this.predator)) {
             this.player.sprite.x = (this.app.screen.width / 2)
@@ -104,6 +113,7 @@ export class Game {
 
             this.player.x = (this.app.screen.width / 2)
             this.player.y = (this.app.screen.width / 2)
+            this.resetTimer();
         }
 
         //si colisionan se le aplica una desaceleracion a al predador y una velocidad = 0
@@ -113,6 +123,14 @@ export class Game {
                 this.predator.velocity = ({ x: 0, y: 0 });
             }
         }
+
+        if (this.startTime === 0) {
+            this.startTime = this.app.ticker.lastTime; // Guarda el tiempo inicial
+        }
+
+        this.totalSeconds = Math.floor((this.app.ticker.lastTime - this.startTime) / 1000);
+        this.timeText.text = this.formatTime(this.totalSeconds);
+
     }
 
     async preload() {
@@ -164,5 +182,39 @@ export class Game {
             rect1.y < rect2.y + (rect2.height / 2) &&
             rect1.y + (rect1.height / 2) > rect2.y
         );
+    }
+
+    //Creo el UI y lo agrego a un container diferente
+    createUI() {
+        this.ui = new PIXI.Container();
+        this.ui.name = "UI";
+        this.app.stage.addChild(this.ui);
+
+        this.createTimeText();
+    }
+
+    createTimeText() {
+        this.timeText = new PIXI.Text();
+        this.timeText.text = "00:00";
+        this.timeText.style.fontSize = '60px'
+        this.timeText.style.fontFamily = "PressStart2P-Regular";
+        this.timeText.style.align = "center";
+        //this.timeText.x = window.innerWidth - 180;
+        this.timeText.y = 30;
+        this.timeText.style.fill = "white";
+        this.ui.addChild(this.timeText);
+    }
+
+    formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60); // Obtener los minutos
+        const remainingSeconds = seconds % 60; // Obtener los segundos restantes
+        //Devuelvo los minutos y segundos formateados.
+        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    }
+
+    resetTimer() {
+        this.startTime = 0;
+        this.totalSeconds = 0;
+        this.timeText.text = this.formatTime(this.totalSeconds);
     }
 }
