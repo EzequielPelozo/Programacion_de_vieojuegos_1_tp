@@ -11,25 +11,31 @@ export class Fish extends Entity2D {
         this.neighborRadius = 100; // Radio para considerar a otros peces cercanos
         this.avoidRadius = 150;    // Radio de evitación para el Player
         this.pushForce = 1;    // Fuerza de empuje al colisionar
+        this.state = 'idle'; // Estado inicial
+
+        // Reducir el tamaño del pez al 10%
+        this.sprite.scale.set(0.1); // Escala en x e y
     }
 
     // Método que se llamará en cada frame
     update(delta, fishes, player) {
         if (!this.listo) return;
 
-        // Aplicar las 3 reglas de Boids
-        let separationForce = this.separation(fishes);
-        let alignmentForce = this.alignment(fishes);
-        let cohesionForce = this.cohesion(fishes);
+        if (this.state === 'idle') {
+            // Aplicar las 3 reglas de Boids
+            let separationForce = this.separation(fishes);
+            let alignmentForce = this.alignment(fishes);
+            let cohesionForce = this.cohesion(fishes);
+            const avoidanceForce = this.avoidPlayer(player);
 
-        // Nueva regla de evitación del jugador
-        const avoidanceForce = this.avoidPlayer(player);
-
-        // Sumar todas las fuerzas (incluida la evitación del jugador)
-        this.acceleration.set(
-            separationForce.x + alignmentForce.x + cohesionForce.x + avoidanceForce.x,
-            separationForce.y + alignmentForce.y + cohesionForce.y + avoidanceForce.y
-        );
+            this.acceleration.set(
+                separationForce.x + alignmentForce.x + cohesionForce.x + avoidanceForce.x,
+                separationForce.y + alignmentForce.y + cohesionForce.y + avoidanceForce.y
+            );
+        } else if (this.state === 'follow') {
+            // Comportamiento al seguir al jugador
+            this.followPlayer(player);
+        }
 
         // Aplicar la aceleración a la velocidad
         this.velocity.x += this.acceleration.x;
@@ -95,6 +101,42 @@ export class Fish extends Entity2D {
         }
     
         return steer; // Devolver la fuerza de evitación (si el jugador está cerca)
+    }
+
+    // Método para cambiar al estado follow
+    followPlayer(player) {
+        const targetPosition = new PIXI.Point(player.sprite.x, player.sprite.y);
+        const distance = this.getDistanceTo(targetPosition);
+        
+        // Lógica para moverse hacia el jugador y alrededor de él
+        if (distance > 50) { // Distancia mínima para acercarse
+            this.acceleration = this.seek(targetPosition);
+        } else {
+            // Movimiento alrededor del jugador
+            const offset = Math.random() * Math.PI * 2; // Ángulo aleatorio para distribuir los peces alrededor
+            this.acceleration = new PIXI.Point(
+                Math.cos(offset) * 0.5, // Ajustar la distancia alrededor
+                Math.sin(offset) * 0.5
+            );
+        }
+    }
+
+    // Método para activar el estado follow
+    activateFollow() {
+        this.state = 'follow';
+    }
+
+    // Método para volver al estado idle (puedes llamarlo cuando sea necesario)
+    deactivateFollow() {
+        this.state = 'idle';
+    }
+
+
+    // Método para obtener la distancia hasta un punto
+    getDistanceTo(target) {
+        const dx = this.sprite.x - target.x;
+        const dy = this.sprite.y - target.y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
     
     // Regla de separación: Evitar que los peces se acerquen demasiado

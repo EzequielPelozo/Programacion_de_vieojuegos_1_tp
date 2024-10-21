@@ -16,6 +16,9 @@ import PlayerImage from '../sprites/dopphin_top_view_ph.png';  // Usa la ruta re
 import FishImage from '../sprites/fish_1_ph.png';            // Usa la ruta relativa
 import Echo from '../sprites/echolocation.png';         // Usa la ruta relativa
 import SharkImage from '../sprites/shark-tv.png';             // Usa la ruta relativa
+import HeartFullImage from '../sprites/heart_full.png';            // Usa la ruta relativa
+import HeartHalfImage from '../sprites/heart_half.png';            // Usa la ruta relativa
+import HeartEmptyImage from '../sprites/heart_empty.png';            // Usa la ruta relativa
 export class Game {
     // Propiedad estática que contendrá la única instancia de la clase (Singleton)
     static instance = null;
@@ -37,11 +40,15 @@ export class Game {
         this.player = null;
         this.fishes = [];
         this.fishCount = 600;
-        this.echoCount = 10;
+        this.echoCharges = 3; // Inicializar cargas de eco
+        this.maxEchoCharges = 3; // Cargas máximas de eco
+        this.echoTimer = 0; // Temporizador para recarga de eco
         this.predator = null;
         this.timeText = null;
         this.startTime = 0; // Tiempo de inicio
         this.totalSeconds = 0; // Tiempo total en segundos
+        this.lives = 3; // Inicializar las vidas
+        this.heartImages = []; // Array para almacenar los corazones
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -61,7 +68,7 @@ export class Game {
             addDisplacementEffect(this.app);
 
             // Instanciar el EcoPool 
-            this.echoPool = new EchoPool(this, this.echoCount);
+            this.echoPool = new EchoPool(this, this.echoCharges);
 
             // Cargo el Player 
             this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this);
@@ -74,6 +81,7 @@ export class Game {
 
             //Cargo el timer al final para que este en la ultima capa
             this.createUI();
+            this.createHearts(); // Mover la carga de corazones aquí
 
             this.app.ticker.add((time) => {
                 // Lógica del juego aquí
@@ -81,11 +89,24 @@ export class Game {
             });
         });
 
-
+        // Llama a esta función para comenzar la recarga de eco
+        this.startEchoRecharge();
 
         // Asignar la instancia actual a la propiedad estática
         Game.instance = this;
     }
+
+    // Método para iniciar la recarga de eco
+    startEchoRecharge() {
+        setInterval(() => {
+            if (this.echoCharges < this.maxEchoCharges) {
+                this.echoCharges++;
+                this.updateEchoDisplay();
+                
+            }
+        }, 3000); // Cada 3 segundos
+    }
+
     gameLoop(time) {
 
         // Actualizar el jugador        
@@ -95,7 +116,7 @@ export class Game {
             fish.update(time, this.fishes, this.player);
         }
         // Actualiza el depredador
-        this.predator.update(time, this.player);
+        this.predator.update(time, this.player, this.fishes);
         // Animar el overlay de agua
         animateWaterOverlay(this.app, time);
 
@@ -106,14 +127,17 @@ export class Game {
         this.moveCamera();
 
 
-        //si colisionan vuelve al player al medio de la pantalla
+        // Chequear colisión con el depredador
         if (this.checkCollideOfSprites(this.player, this.predator)) {
-            this.player.sprite.x = (this.app.screen.width / 2)
-            this.player.sprite.y = (this.app.screen.height / 2)
-
-            this.player.x = (this.app.screen.width / 2)
-            this.player.y = (this.app.screen.width / 2)
-            this.resetTimer();
+            this.lives--; // Reducir vidas
+            this.updateHeartDisplay(); // Actualizar visualización de vidas
+            if (this.lives <= 0) {
+                // Lógica para terminar el juego o reiniciar
+                console.log('Game Over'); // Placeholder para lógica de fin de juego
+                this.createGameOver();
+            } else {
+                this.resetPlayerPosition(); // Resetear posición del jugador
+            }
         }
 
         //si colisionan se le aplica una desaceleracion a al predador y una velocidad = 0
@@ -133,6 +157,15 @@ export class Game {
 
     }
 
+
+    resetPlayerPosition() {
+        this.player.sprite.x = (this.app.screen.width / 2);
+        this.player.sprite.y = (this.app.screen.height / 2);
+        this.player.x = (this.app.screen.width / 2);
+        this.player.y = (this.app.screen.width / 2);
+        this.resetTimer();
+    }
+
     async preload() {
         const assets = [
             { alias: 'background', src: backgroundImage },
@@ -141,7 +174,10 @@ export class Game {
             { alias: 'fish', src: FishImage },
             { alias: 'player', src: PlayerImage },
             { alias: 'echo', src: Echo },
-            { alias: 'shark', src: SharkImage }
+            { alias: 'shark', src: SharkImage },
+            { alias: 'heart_full', src: HeartFullImage }, // Cargar la imagen de corazones
+            { alias: 'heart_half', src: HeartHalfImage }, // Cargar la imagen de corazones
+            { alias: 'heart_empty', src: HeartEmptyImage } // Cargar la imagen de corazones
         ];
 
         // Usamos `PIXI.Assets.load` para cargar todos los recursos
@@ -191,6 +227,8 @@ export class Game {
         this.app.stage.addChild(this.ui);
 
         this.createTimeText();
+        this.createHearts(); // Mover la carga de corazones aquí
+        this.createEchoCounter(); // Crear el contador de eco
     }
 
     createTimeText() {
@@ -199,7 +237,7 @@ export class Game {
         this.timeText.style.fontSize = '60px'
         this.timeText.style.fontFamily = "PressStart2P-Regular";
         this.timeText.style.align = "center";
-        //this.timeText.x = window.innerWidth - 180;
+        this.timeText.x = window.innerWidth /2 - this.timeText.width/2;
         this.timeText.y = 30;
         this.timeText.style.fill = "white";
         this.ui.addChild(this.timeText);
@@ -216,5 +254,78 @@ export class Game {
         this.startTime = 0;
         this.totalSeconds = 0;
         this.timeText.text = this.formatTime(this.totalSeconds);
+    }
+
+    createHearts() {
+    
+        for (let i = 0; i < 1; i++) {
+            const heart = new PIXI.Sprite(PIXI.Assets.get('heart_full')); // Usar el alias correcto
+            heart.width = 50; // Ajusta el tamaño según sea necesario
+            heart.height = 50;
+            heart.x = 30 + (i * 60); // Espaciado entre corazones
+            heart.y = 30; // Posición vertical
+    
+            this.heartImages.push(heart); // Almacenar la referencia del corazón
+            this.ui.addChild(heart); // Agregar el corazón al contenedor de UI
+        }
+    
+        this.updateHeartDisplay(); // Mostrar el estado inicial
+    }
+
+    
+    updateHeartDisplay() {
+        // Este método se llama para actualizar los corazones según las vidas restantes
+        for (let i = 0; i < this.heartImages.length; i++) {
+            const heart = this.heartImages[i];
+            if (this.lives > 2) {
+                heart.texture = PIXI.Assets.get('heart_full'); // Vida completa
+            } else if (this.lives === 2) {
+                heart.texture = PIXI.Assets.get('heart_half'); // Media vida
+            } else if (this.lives === 1) {
+                heart.texture = PIXI.Assets.get('heart_empty'); // Sin vida
+            } else {
+                heart.texture = PIXI.Texture.EMPTY; // Ocultar el corazón si no hay vidas
+            }
+        }
+    }
+
+
+    // Método para crear el contador de eco
+    createEchoCounter() {
+        // Cargar el sprite de eco
+        const echoSprite = new PIXI.Sprite(PIXI.Assets.get('echo'));
+        echoSprite.width = 50; // Ajusta el tamaño según sea necesario
+        echoSprite.height = 50;
+        echoSprite.x = window.innerWidth - 120 ; 
+        echoSprite.y = 30; // Posición vertical
+        this.ui.addChild(echoSprite); // Agregar el corazón al contenedor de UI
+
+        // Crear el texto para el contador de cargas
+        this.echoText = new PIXI.Text();
+        this.echoText.text = this.echoCharges.toString();
+        this.echoText.style.fontSize = '30px'
+        this.echoText.style.fontFamily = "PressStart2P-Regular";
+        this.echoText.style.align = "center";
+        this.echoText.x = echoSprite.x + echoSprite.width + 10; // Espaciado entre sprite y texto
+        this.echoText.y = 30;
+        this.echoText.style.fill = "white";
+        this.ui.addChild(this.echoText); // Agregar el texto al contenedor
+    }
+
+    // Método para actualizar la visualización del contador de eco
+    updateEchoDisplay() {
+        this.echoText.text = this.echoCharges.toString();
+    }
+
+    createGameOver() {
+        this.gameoverText = new PIXI.Text();
+        this.gameoverText.text = "GAME OVER";
+        this.gameoverText.style.fontSize = '60px'
+        this.gameoverText.style.fontFamily = "PressStart2P-Regular";
+        this.gameoverText.style.align = "center";
+        this.gameoverText.x = window.innerWidth /2 - this.gameoverText.width/2;
+        this.gameoverText.y = window.innerHeight /2 - this.gameoverText.height/2;
+        this.gameoverText.style.fill = "white";
+        this.ui.addChild(this.gameoverText);
     }
 }

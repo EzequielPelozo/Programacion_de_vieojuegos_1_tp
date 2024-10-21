@@ -6,6 +6,7 @@ export class Player extends Entity2D {
         super(x, y, image, game);
 
         this.name = "Player";
+        this.echoCharges = 3; // Inicializar cargas de eco
 
         this.keys = {}; // Objeto para manejar el estado de las teclas  
         
@@ -18,34 +19,30 @@ export class Player extends Entity2D {
 
     update(delta) {
         super.update(delta);
-
-        if (!this.listo) return;       
-        // console.log(this.name)
-        // Revisar colisiones 
-        // this.checkCollisions();
-
-        // Hacer que el sprite reaparezca al salir de la pantalla (efecto de pantalla envolvente)
-        // this.wrapAroundScreen();
-        // Hacer que el sprite no pase de la pantalla
+    
+        if (!this.listo) return;
+    
+        // Comentar esta línea si es necesaria la fricción después de mover
+        // this.speed *= this.friction; 
+    
         this.bounceOnEdges(delta);
+        this.checkKeys(delta); // Chequear los inputs
         
-        // Aplicar fricción para que la velocidad se reduzca gradualmente
-        this.speed *= this.friction;
-
-        // Chequear los inputs
-        this.checkKeys(delta)
-        
-         // Calcular el desplazamiento en los ejes X e Y basado en la velocidad y rotación
-         const dy = Math.cos(this.sprite.rotation)          //* this.speed;  Direccion en X
-         const dx = Math.sin(this.sprite.rotation)          //* this.speed;  Direccion en Y     
- 
-         // Actualizar la posición del sprite
-         this.sprite.x += dx * this.speed * delta.deltaTime
-         this.sprite.y -= dy * this.speed * delta.deltaTime // Se resta porque Y aumenta hacia abajo
- 
-         this.x = this.sprite.x
-         this.y = this.sprite.y;                            // Actualizar la posición en variables locales         
+        // Calcular el desplazamiento en los ejes X e Y basado en la velocidad y rotación
+        const dy = Math.cos(this.sprite.rotation); // Direccion en Y
+        const dx = Math.sin(this.sprite.rotation); // Direccion en X
+    
+        // Actualizar la posición del sprite
+        this.sprite.x += dx * this.speed * delta.deltaTime;
+        this.sprite.y -= dy * this.speed * delta.deltaTime; // Se resta porque Y aumenta hacia abajo
+    
+        this.x = this.sprite.x;
+        this.y = this.sprite.y; // Actualizar la posición en variables locales         
+    
+        // Aplicar fricción aquí después de mover el jugador
+        this.speed *= this.friction; 
     }
+    
 
     // Evento para cuando una tecla se presiona
     onKeyDown(event) {
@@ -81,9 +78,40 @@ export class Player extends Entity2D {
              // Solo disparar si no se está disparando
              if (!this.isFiring) {
                 this.isFiring = true; // Marcar que se está disparando
-                const { x, y, rotation } = this.sprite;
-                this.game.echoPool.getEcho(x, y, rotation); // Disparar el eco
-            }
+
+                //if (this.echoCharges > 0){
+                    //this.echoCharges--; // Reducir cargas de eco
+                    //this.updateEchoDisplay();
+                    const { x, y, rotation } = this.sprite;
+                    this.game.echoPool.getEcho(x, y, rotation); // Disparar el eco
+                //}
+
+
+                
+            // Activar el estado 'follow' en los peces cercanos
+            this.game.fishes.forEach(fish => {
+                const distance = this.getDistance(fish.sprite);
+                if (distance < 500) { // Cambia 150 por la distancia que consideres adecuada
+                    fish.activateFollow();
+                    setTimeout(() => {
+                        fish.deactivateFollow();
+                    }, 10000); // 10 segundos en milisegundos
+                }
+            });
+
+        }
+            
         }
     }
+
+
+// Método para obtener la distancia hasta otro sprite
+getDistance(otherSprite) {
+    const dx = this.sprite.x - otherSprite.x;
+    const dy = this.sprite.y - otherSprite.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+
+
 }
