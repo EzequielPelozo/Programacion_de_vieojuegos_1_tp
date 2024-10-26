@@ -1,7 +1,6 @@
 import { Sprite, DisplacementFilter } from 'pixi.js';
 
-export function addDisplacementEffect(app)
-{
+export function addDisplacementEffect(app, gameContainer) {
     // Create a sprite from the preloaded displacement asset.
     const sprite = Sprite.from('displacement');
 
@@ -17,5 +16,5 @@ export function addDisplacementEffect(app)
     });
 
     // Add the filter to the stage.
-    app.stage.filters = [filter];
+    gameContainer.filters = [filter];
 }

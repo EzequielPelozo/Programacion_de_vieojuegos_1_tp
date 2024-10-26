@@ -49,6 +49,7 @@ export class Game {
         this.totalSeconds = 0; // Tiempo total en segundos
         this.lives = 3; // Inicializar las vidas
         this.heartImages = []; // Array para almacenar los corazones
+        this.gameOver = false;
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -65,7 +66,8 @@ export class Game {
             // Cargar el Fondo
             addBackground(this);
             addWaterOverlay(this);
-            addDisplacementEffect(this.app);
+            //le paso el contenedor para tener la interfaz y el juego en diferentes contenedores ya que si estan en el mismo afecta a la interfaz el filtro.
+            addDisplacementEffect(this.app, this.mainContainer);
 
             // Instanciar el EcoPool 
             this.echoPool = new EchoPool(this, this.echoCharges);
@@ -81,7 +83,7 @@ export class Game {
 
             //Cargo el timer al final para que este en la ultima capa
             this.createUI();
-            this.createHearts(); // Mover la carga de corazones aquí
+            //this.createHearts(); // Mover la carga de corazones aquí
 
             this.app.ticker.add((time) => {
                 // Lógica del juego aquí
@@ -99,10 +101,11 @@ export class Game {
     // Método para iniciar la recarga de eco
     startEchoRecharge() {
         setInterval(() => {
+
             if (this.echoCharges < this.maxEchoCharges) {
                 this.echoCharges++;
                 this.updateEchoDisplay();
-                
+
             }
         }, 3000); // Cada 3 segundos
     }
@@ -131,7 +134,7 @@ export class Game {
         if (this.checkCollideOfSprites(this.player, this.predator)) {
             this.lives--; // Reducir vidas
             this.updateHeartDisplay(); // Actualizar visualización de vidas
-            if (this.lives <= 0) {
+            if (this.lives <= 0 && !this.gameOver) {
                 // Lógica para terminar el juego o reiniciar
                 console.log('Game Over'); // Placeholder para lógica de fin de juego
                 this.createGameOver();
@@ -148,13 +151,15 @@ export class Game {
             }
         }
 
-        if (this.startTime === 0) {
-            this.startTime = this.app.ticker.lastTime; // Guarda el tiempo inicial
+        //si no tiene mas vidas, no actualizo el tiempo
+        if (this.lives > 0) {
+            if (this.startTime === 0) {
+                this.startTime = this.app.ticker.lastTime; // Guarda el tiempo inicial
+            }
+
+            this.totalSeconds = Math.floor((this.app.ticker.lastTime - this.startTime) / 1000);
+            this.timeText.text = this.formatTime(this.totalSeconds);
         }
-
-        this.totalSeconds = Math.floor((this.app.ticker.lastTime - this.startTime) / 1000);
-        this.timeText.text = this.formatTime(this.totalSeconds);
-
     }
 
 
@@ -234,10 +239,10 @@ export class Game {
     createTimeText() {
         this.timeText = new PIXI.Text();
         this.timeText.text = "00:00";
-        this.timeText.style.fontSize = '60px'
+        this.timeText.style.fontSize = '40px'
         this.timeText.style.fontFamily = "PressStart2P-Regular";
         this.timeText.style.align = "center";
-        this.timeText.x = window.innerWidth /2 - this.timeText.width/2;
+        this.timeText.x = window.innerWidth / 2 - this.timeText.width / 2;
         this.timeText.y = 30;
         this.timeText.style.fill = "white";
         this.ui.addChild(this.timeText);
@@ -257,22 +262,22 @@ export class Game {
     }
 
     createHearts() {
-    
+
         for (let i = 0; i < 1; i++) {
             const heart = new PIXI.Sprite(PIXI.Assets.get('heart_full')); // Usar el alias correcto
             heart.width = 50; // Ajusta el tamaño según sea necesario
             heart.height = 50;
             heart.x = 30 + (i * 60); // Espaciado entre corazones
             heart.y = 30; // Posición vertical
-    
+
             this.heartImages.push(heart); // Almacenar la referencia del corazón
             this.ui.addChild(heart); // Agregar el corazón al contenedor de UI
         }
-    
+
         this.updateHeartDisplay(); // Mostrar el estado inicial
     }
 
-    
+
     updateHeartDisplay() {
         // Este método se llama para actualizar los corazones según las vidas restantes
         for (let i = 0; i < this.heartImages.length; i++) {
@@ -295,10 +300,10 @@ export class Game {
         // Cargar el sprite de eco
         const echoSprite = new PIXI.Sprite(PIXI.Assets.get('echo'));
         echoSprite.width = 50; // Ajusta el tamaño según sea necesario
-        echoSprite.height = 50;
-        echoSprite.x = window.innerWidth - 120 ; 
-        echoSprite.y = 30; // Posición vertical
-        this.ui.addChild(echoSprite); // Agregar el corazón al contenedor de UI
+        echoSprite.height = 30;
+        echoSprite.x = window.innerWidth - 120;
+        echoSprite.y = 25; // Posición vertical
+        this.ui.addChild(echoSprite); // Agregar el eco al contenedor de UI
 
         // Crear el texto para el contador de cargas
         this.echoText = new PIXI.Text();
@@ -319,13 +324,23 @@ export class Game {
 
     createGameOver() {
         this.gameoverText = new PIXI.Text();
-        this.gameoverText.text = "GAME OVER";
+        this.gameoverText.text = "GAME OVER\n press `R` to restart";
         this.gameoverText.style.fontSize = '60px'
         this.gameoverText.style.fontFamily = "PressStart2P-Regular";
         this.gameoverText.style.align = "center";
-        this.gameoverText.x = window.innerWidth /2 - this.gameoverText.width/2;
-        this.gameoverText.y = window.innerHeight /2 - this.gameoverText.height/2;
+        this.gameoverText.x = window.innerWidth / 2 - this.gameoverText.width / 2;
+        this.gameoverText.y = window.innerHeight / 2 - this.gameoverText.height / 2;
         this.gameoverText.style.fill = "white";
+        this.timeText.text = "00:00";
+        this.gameOver = true;
         this.ui.addChild(this.gameoverText);
+    }
+
+    restartGame() {
+        this.gameOver = false;
+        this.ui.removeChildAt((this.ui.children.length - 1));
+        this.resetTimer();
+        this.lives = 3;
+        this.updateHeartDisplay();
     }
 }
