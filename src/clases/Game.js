@@ -342,5 +342,6 @@ export class Game {
         this.resetTimer();
         this.lives = 3;
         this.updateHeartDisplay();
+        this.predator.SetStartPosition(Math.random() * this.width, Math.random() * this.height)
     }
 }
