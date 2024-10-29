@@ -18,7 +18,7 @@ export class Fish extends Entity2D {
     }
 
     // Método que se llamará en cada frame
-    update(delta, fishes, player) {
+    update(delta, fishes, player, gameloopstage) {
         if (!this.listo) return;
 
         if (this.state === 'idle') {
@@ -27,7 +27,7 @@ export class Fish extends Entity2D {
             let alignmentForce = this.alignment(fishes);
             let cohesionForce = this.cohesion(fishes);
             const avoidanceForce = this.avoidPlayer(player);
-
+            
             this.acceleration.set(
                 separationForce.x + alignmentForce.x + cohesionForce.x + avoidanceForce.x,
                 separationForce.y + alignmentForce.y + cohesionForce.y + avoidanceForce.y

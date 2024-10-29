@@ -175,16 +175,16 @@ export class Predator extends Entity2D {
     }
 
     // Método para obtener la distancia hasta un punto
-    getDistanceTo(target) {
-        const dx = this.sprite.x - target.x;
-        const dy = this.sprite.y - target.y;
+    getDistanceTo(origin, target) {
+        const dx = origin.x - target.x;
+        const dy = origin.y - target.y;
         return Math.sqrt(dx ** 2 + dy ** 2);
     }
 
     // Método para obtener la distancia aproximada hasta un punto
-    getApproximateDistanceTo(target) {
-        const dx = Math.abs(this.sprite.x - target.x);
-        const dy = Math.abs(this.sprite.y - target.y);
+    getApproximateDistanceTo(origin, target) {
+        const dx = Math.abs(origin.x - target.x);
+        const dy = Math.abs(origin.y - target.y);
         
         // Determinar la distancia mayor y menor
         const maxDistance = Math.max(dx, dy);

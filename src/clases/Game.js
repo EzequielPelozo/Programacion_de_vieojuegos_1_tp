@@ -50,6 +50,7 @@ export class Game {
         this.lives = 3; // Inicializar las vidas
         this.heartImages = []; // Array para almacenar los corazones
         this.gameOver = false;
+        this.gameloopstage = 0;
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -111,15 +112,20 @@ export class Game {
     }
 
     gameLoop(time) {
+        
+        this.gameloopstage++;
 
         // Actualizar el jugador        
         this.player.update(time);
+
         // Actualizar cada pez
         for (let fish of this.fishes) {
-            fish.update(time, this.fishes, this.player);
+            fish.update(time, this.fishes, this.player, this.gameloopstage);
         }
+
         // Actualiza el depredador
         this.predator.update(time, this.player, this.fishes);
+
         // Animar el overlay de agua
         animateWaterOverlay(this.app, time);
 
