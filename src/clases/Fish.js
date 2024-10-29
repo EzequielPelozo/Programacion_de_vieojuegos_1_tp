@@ -7,6 +7,7 @@ export class Fish extends Entity2D {
         this.name = "Fish";
         this.velocity = new PIXI.Point(Math.random() * 2 - 1, Math.random() * 2 - 1); // Dirección inicial aleatoria
         this.acceleration = new PIXI.Point(0, 0);
+        //this.maxSpeed = 2;
         this.maxForce = 0.05; // Fuerza máxima que puede aplicar
         this.neighborRadius = 100; // Radio para considerar a otros peces cercanos
         this.avoidRadius = 150;    // Radio de evitación para el Player
@@ -15,49 +16,61 @@ export class Fish extends Entity2D {
 
         // Reducir el tamaño del pez al 10%
         this.sprite.scale.set(0.1); // Escala en x e y
+        
+        // Propiedades para almacenar la última velocidad y posición calculadas
+        this.lastVelocity = new PIXI.Point(this.velocity.x, this.velocity.y);
+        this.lastPosition = new PIXI.Point(x, y); // Posición inicial del pez
     }
 
     // Método que se llamará en cada frame
-    update(delta, fishes, player, gameloopstage) {
+    update(delta, fishes, player, framenum) {
         if (!this.listo) return;
-
-        if (this.state === 'idle') {
-            // Aplicar las 3 reglas de Boids
-            let separationForce = this.separation(fishes);
-            let alignmentForce = this.alignment(fishes);
-            let cohesionForce = this.cohesion(fishes);
-            const avoidanceForce = this.avoidPlayer(player);
-
-            this.acceleration.set(
-                separationForce.x + alignmentForce.x + cohesionForce.x + avoidanceForce.x,
-                separationForce.y + alignmentForce.y + cohesionForce.y + avoidanceForce.y
-            );
-        } else if (this.state === 'follow') {
-            // Comportamiento al seguir al jugador
-            this.followPlayer(player);
+    
+        // Solo recalculamos aceleración y velocidad cada 3 frames
+        if (framenum % 1 === 0) {
+            if (this.state === 'idle') {
+                // Aplicar las 3 reglas de Boids
+                let separationForce = this.separation(fishes);
+                let alignmentForce = this.alignment(fishes);
+                let cohesionForce = this.cohesion(fishes);
+                const avoidanceForce = this.avoidPlayer(player);
+    
+                this.acceleration.set(
+                    separationForce.x + alignmentForce.x + cohesionForce.x + avoidanceForce.x,
+                    separationForce.y + alignmentForce.y + cohesionForce.y + avoidanceForce.y
+                );
+            } else if (this.state === 'follow') {
+                // Comportamiento al seguir al jugador
+                this.followPlayer(player);
+            }
+    
+            // Aplicar la aceleración a la velocidad
+            this.velocity.x += this.acceleration.x;
+            this.velocity.y += this.acceleration.y;
+    
+            // Limitar la velocidad máxima
+            const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2);
+            if (speed > this.maxSpeed) {
+                this.velocity.x = (this.velocity.x / speed) * this.maxSpeed;
+                this.velocity.y = (this.velocity.y / speed) * this.maxSpeed;
+            }
+    
+            // Guardamos las últimas posiciones calculadas
+            this.lastVelocity.set(this.velocity.x, this.velocity.y);
+            this.lastPosition.set(this.sprite.x, this.sprite.y);
         }
-
-        // Aplicar la aceleración a la velocidad
-        this.velocity.x += this.acceleration.x;
-        this.velocity.y += this.acceleration.y;
-
-        // Limitar la velocidad máxima
-        const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2);
-        if (speed > this.maxSpeed) {
-            this.velocity.x = (this.velocity.x / speed) * this.maxSpeed;
-            this.velocity.y = (this.velocity.y / speed) * this.maxSpeed;
-        }
-
-        // Mover el pez usando la velocidad
-        this.sprite.x += this.velocity.x * delta.deltaTime;
-        this.sprite.y += this.velocity.y * delta.deltaTime;
-
+    
+        // Usamos las últimas velocidades calculadas en cada frame
+        this.sprite.x += this.lastVelocity.x * delta.deltaTime;
+        this.sprite.y += this.lastVelocity.y * delta.deltaTime;
+    
         // Actualizar la rotación en función de la dirección de la velocidad
-        this.sprite.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2; // Se Suma es para que "miren" hacia adelante
-
+        this.sprite.rotation = Math.atan2(this.lastVelocity.y, this.lastVelocity.x) + Math.PI / 2;
+    
         // Envolver el pez alrededor de los bordes de la pantalla
         this.wrapAroundScreen();
     }
+    
 
      // Regla para evitar al jugador (Player)
      avoidPlayer(player) {
@@ -136,18 +149,24 @@ export class Fish extends Entity2D {
         let steer = new PIXI.Point(0, 0);
         let count = 0;
 
-        for (let other of fishes) {
-            let dx = this.sprite.x - other.sprite.x;
-            let dy = this.sprite.y - other.sprite.y;
-            let distance = this.getApproximateDistanceTo(other.sprite);
+        // Obtener los peces cercanos de la grilla
+        const nearbyFishes = this.game.grid.getNeighbors(this);
 
-            if (other !== this && distance < 50) { // Distancia mínima de separación
-                const diff = new PIXI.Point(dx / distance, dy / distance);
-                steer.x += diff.x;
-                steer.y += diff.y;
-                count++;
+        // Iterar solo sobre los peces cercanos en la grilla
+        nearbyFishes.forEach(other => {
+            if (other !== this) {
+                let dx = this.sprite.x - other.sprite.x;
+                let dy = this.sprite.y - other.sprite.y;
+                let distance = this.getApproximateDistanceTo(other.sprite);
+
+                if (distance < 50) { // Rango de separación
+                    const diff = new PIXI.Point(dx / distance, dy / distance);
+                    steer.x += diff.x;
+                    steer.y += diff.y;
+                    count++;
+                }
             }
-        }
+        });
 
         if (count > 0) {
             steer.x /= count;
@@ -173,15 +192,21 @@ export class Fish extends Entity2D {
         let avgVelocity = new PIXI.Point(0, 0);
         let count = 0;
 
-        for (let other of fishes) {
-            const distance = this.getDistanceTo(other.sprite);
+        // Obtener los peces cercanos de la grilla
+        const nearbyFishes = this.game.grid.getNeighbors(this);
 
-            if (other !== this && distance < this.neighborRadius) {
-                avgVelocity.x += other.velocity.x;
-                avgVelocity.y += other.velocity.y;
-                count++;
+        // Iterar solo sobre los peces cercanos en la grilla
+        nearbyFishes.forEach(other => {
+            if (other !== this) {
+                const distance = this.getDistanceTo(other.sprite);
+
+                if (distance < this.neighborRadius) {
+                    avgVelocity.x += other.velocity.x;
+                    avgVelocity.y += other.velocity.y;
+                    count++;
+                }
             }
-        }
+        });
 
         if (count > 0) {
             avgVelocity.x /= count;
@@ -202,20 +227,27 @@ export class Fish extends Entity2D {
         return new PIXI.Point(0, 0);
     }
 
+
     // Regla de cohesión: Moverse hacia el centro de masa de los vecinos cercanos
     cohesion(fishes) {
         let centerOfMass = new PIXI.Point(0, 0);
         let count = 0;
 
-        for (let other of fishes) {
-            const distance = this.getDistanceTo(other.sprite);
+        // Obtener los peces cercanos de la grilla
+        const nearbyFishes = this.game.grid.getNeighbors(this);
 
-            if (other !== this && distance < this.neighborRadius) {
-                centerOfMass.x += other.sprite.x;
-                centerOfMass.y += other.sprite.y;
-                count++;
+        // Iterar solo sobre los peces cercanos en la grilla
+        nearbyFishes.forEach(other => {
+            if (other !== this) {
+                const distance = this.getDistanceTo(other.sprite);
+
+                if (distance < this.neighborRadius) {
+                    centerOfMass.x += other.sprite.x;
+                    centerOfMass.y += other.sprite.y;
+                    count++;
+                }
             }
-        }
+        });
 
         if (count > 0) {
             centerOfMass.x /= count;
@@ -226,6 +258,7 @@ export class Fish extends Entity2D {
 
         return new PIXI.Point(0, 0);
     }
+
 
     // Método para moverse hacia un objetivo
     seek(target) {

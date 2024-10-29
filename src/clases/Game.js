@@ -1,12 +1,13 @@
 import * as PIXI from 'pixi.js';
 import { addBackground } from '../components/addBackground.js'
-import { addWaterOverlay, animateWaterOverlay } from '../components/addWaterOverlay.js'
-import { addDisplacementEffect } from '../components/addDisplacementEffect.js'
+import { addWaterOverlay, animateWaterOverlay } from '../components/addWaterOverlay.js';
+import { addDisplacementEffect } from '../components/addDisplacementEffect.js';
 import { Player } from './Player.js';                             // Importamos la clase Player 
 import { Fish } from './Fish.js';                                 // Importa la clase Fish
-import { lerp } from '../components/Utils.js'
+import { lerp } from '../components/Utils.js';
 import { EchoPool } from "./EchoPool";
 import { Predator } from './Predator.js';
+import { Grid } from './Grid.js';
 
 // Imagenes
 import backgroundImage from '../sprites/sea_background_1.png';     // Usa la ruta relativa
@@ -35,6 +36,9 @@ export class Game {
         this.height = window.innerHeight * 4;
         this.escale = 1
 
+        const CELL_SIZE = 100; // Ajusta el tamaño de la celda según el tamaño del mapa y número de peces
+        this.grid = new Grid(CELL_SIZE, this.width, this.height); // Inicializar la grilla
+
         this.mainContainer = new PIXI.Container();
 
         this.player = null;
@@ -50,7 +54,7 @@ export class Game {
         this.lives = 3; // Inicializar las vidas
         this.heartImages = []; // Array para almacenar los corazones
         this.gameOver = false;
-        this.gameloopstage = 0;
+        this.framenum = 0;
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -113,14 +117,19 @@ export class Game {
 
     gameLoop(time) {
         
-        this.gameloopstage++;
+        this.framenum++;
 
         // Actualizar el jugador        
         this.player.update(time);
 
         // Actualizar cada pez
         for (let fish of this.fishes) {
-            fish.update(time, this.fishes, this.player, this.gameloopstage);
+            fish.update(time, this.fishes, this.player, this.framenum);
+        }
+        
+        // Solo actualizar la grilla cada 2 frames
+        if (this.framenum % 2 === 0) {
+            this.grid.updateGrid(this.fishes);
         }
 
         // Actualiza el depredador
