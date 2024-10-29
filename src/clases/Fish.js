@@ -42,7 +42,7 @@ export class Fish extends Entity2D {
         this.velocity.y += this.acceleration.y;
 
         // Limitar la velocidad máxima
-        const speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+        const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2);
         if (speed > this.maxSpeed) {
             this.velocity.x = (this.velocity.x / speed) * this.maxSpeed;
             this.velocity.y = (this.velocity.y / speed) * this.maxSpeed;
@@ -64,7 +64,7 @@ export class Fish extends Entity2D {
         let steer = new PIXI.Point(0, 0);
         const dx = this.sprite.x - player.sprite.x;
         const dy = this.sprite.y - player.sprite.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const distance = this.getDistanceTo(player.sprite)
     
         const combinedRadii = (this.sprite.width / 2) + (player.sprite.width / 2); // Suma de los radios del Fish y el Player
     
@@ -129,15 +129,7 @@ export class Fish extends Entity2D {
     // Método para volver al estado idle (puedes llamarlo cuando sea necesario)
     deactivateFollow() {
         this.state = 'idle';
-    }
-
-
-    // Método para obtener la distancia hasta un punto
-    getDistanceTo(target) {
-        const dx = this.sprite.x - target.x;
-        const dy = this.sprite.y - target.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
+    }    
     
     // Regla de separación: Evitar que los peces se acerquen demasiado
     separation(fishes) {
@@ -147,7 +139,7 @@ export class Fish extends Entity2D {
         for (let other of fishes) {
             let dx = this.sprite.x - other.sprite.x;
             let dy = this.sprite.y - other.sprite.y;
-            let distance = Math.sqrt(dx * dx + dy * dy);
+            let distance = this.getDistanceTo(other.sprite);
 
             if (other !== this && distance < 50) { // Distancia mínima de separación
                 const diff = new PIXI.Point(dx / distance, dy / distance);
@@ -162,7 +154,7 @@ export class Fish extends Entity2D {
             steer.y /= count;
         }
 
-        if (Math.sqrt(steer.x * steer.x + steer.y * steer.y) > 0) {
+        if (steer.x ** 2 + steer.y ** 2 > 0) {
             steer = this.normalize(steer);
             steer.x *= this.maxSpeed;
             steer.y *= this.maxSpeed;
@@ -182,10 +174,7 @@ export class Fish extends Entity2D {
         let count = 0;
 
         for (let other of fishes) {
-            const distance = Math.sqrt(
-                (this.sprite.x - other.sprite.x) ** 2 + 
-                (this.sprite.y - other.sprite.y) ** 2
-            );
+            const distance = this.getDistanceTo(other.sprite);
 
             if (other !== this && distance < this.neighborRadius) {
                 avgVelocity.x += other.velocity.x;
@@ -219,10 +208,7 @@ export class Fish extends Entity2D {
         let count = 0;
 
         for (let other of fishes) {
-            const distance = Math.sqrt(
-                (this.sprite.x - other.sprite.x) ** 2 + 
-                (this.sprite.y - other.sprite.y) ** 2
-            );
+            const distance = this.getDistanceTo(other.sprite);
 
             if (other !== this && distance < this.neighborRadius) {
                 centerOfMass.x += other.sprite.x;
@@ -262,7 +248,7 @@ export class Fish extends Entity2D {
 
     // Normaliza un vector para que tenga longitud 1
     normalize(vector) {
-        const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+        const length = this.getVectorResult(vector);
         if (length > 0) {
             return new PIXI.Point(vector.x / length, vector.y / length);
         }
@@ -271,10 +257,36 @@ export class Fish extends Entity2D {
 
     // Limita la magnitud de un vector
     limit(vector, max) {
-        const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+        const length = this.getVectorResult(vector);
         if (length > max) {
             return new PIXI.Point((vector.x / length) * max, (vector.y / length) * max);
         }
         return vector;
     }
+
+    // Método para obtener la resultante de un vector
+    getVectorResult(vector){
+        return Math.sqrt(vector.x ** 2 + vector.y ** 2);
+    }
+
+    // Método para obtener la distancia hasta un punto
+    getDistanceTo(target) {
+        const dx = this.sprite.x - target.x;
+        const dy = this.sprite.y - target.y;
+        return Math.sqrt(dx ** 2 + dy ** 2);
+    }
+
+    // Método para obtener la distancia aproximada hasta un punto
+    getApproximateDistanceTo(target) {
+        const dx = Math.abs(this.sprite.x - target.x);
+        const dy = Math.abs(this.sprite.y - target.y);
+        
+        // Determinar la distancia mayor y menor
+        const maxDistance = Math.max(dx, dy);
+        const minDistance = Math.min(dx, dy);
+        
+        // Aplicar la aproximación
+        return maxDistance * 0.7 + minDistance * 0.3;
+    }
+
 }

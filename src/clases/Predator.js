@@ -57,7 +57,7 @@ export class Predator extends Entity2D {
         this.velocity.y += this.acceleration.y;
 
         // Limitar la velocidad máxima
-        const speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+        const speed = this.getVectorResult(this.velocity);
         if (speed > this.maxSpeed) {
             this.velocity.x = (this.velocity.x / speed) * this.maxSpeed;
             this.velocity.y = (this.velocity.y / speed) * this.maxSpeed;
@@ -82,7 +82,7 @@ export class Predator extends Entity2D {
         this.velocity.y += this.acceleration.y;
 
         // Limitar la velocidad máxima
-        const speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+        const speed = this.getVectorResult(this.velocity);
         if (speed > this.maxSpeed / 2) {
             this.velocity.x = (this.velocity.x / speed) * (this.maxSpeed / 2);
             this.velocity.y = (this.velocity.y / speed) * (this.maxSpeed / 2);
@@ -137,7 +137,7 @@ export class Predator extends Entity2D {
 
     // Normaliza un vector para que tenga longitud 1
     normalize(vector) {
-        const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+        const length = this.getVectorResult(vector);
         if (length > 0) {
             return new PIXI.Point(vector.x / length, vector.y / length);
         }
@@ -146,7 +146,7 @@ export class Predator extends Entity2D {
 
     // Limita la magnitud de un vector
     limit(vector, max) {
-        const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+        const length = this.getVectorResult(vector);
         if (length > max) {
             return new PIXI.Point((vector.x / length) * max, (vector.y / length) * max);
         }
@@ -157,8 +157,8 @@ export class Predator extends Entity2D {
     isBlockedByFishes(player, fishes) {
         for (let fish of fishes) {
             if (fish.state === 'follow') { // Verificar que el pez esté en estado follow
-                const distanceToFish = this.getDistance(fish.sprite, player.sprite);
-                const distanceToShark = this.getDistance(this.sprite, player.sprite);
+                const distanceToFish = this.getDistanceTo(fish.sprite, player.sprite);
+                const distanceToShark = this.getDistanceTo(this.sprite, player.sprite);
     
                 // Si el pez está entre el tiburón y el jugador
                 if (distanceToFish < distanceToShark) {
@@ -169,9 +169,29 @@ export class Predator extends Entity2D {
         return false; // No hay peces bloqueando
     }
 
-    getDistance(sprite1, sprite2) {
-        const dx = sprite1.x - sprite2.x;
-        const dy = sprite1.y - sprite2.y;
-        return Math.sqrt(dx * dx + dy * dy);
+    // Método para obtener la resultante de un vector
+    getVectorResult(vector){
+        return Math.sqrt(vector.x ** 2 + vector.y ** 2);
     }
+
+    // Método para obtener la distancia hasta un punto
+    getDistanceTo(target) {
+        const dx = this.sprite.x - target.x;
+        const dy = this.sprite.y - target.y;
+        return Math.sqrt(dx ** 2 + dy ** 2);
+    }
+
+    // Método para obtener la distancia aproximada hasta un punto
+    getApproximateDistanceTo(target) {
+        const dx = Math.abs(this.sprite.x - target.x);
+        const dy = Math.abs(this.sprite.y - target.y);
+        
+        // Determinar la distancia mayor y menor
+        const maxDistance = Math.max(dx, dy);
+        const minDistance = Math.min(dx, dy);
+        
+        // Aplicar la aproximación
+        return maxDistance * 0.7 + minDistance * 0.3;
+    }
+    
 }

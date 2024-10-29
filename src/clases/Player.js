@@ -7,6 +7,7 @@ export class Player extends Entity2D {
 
         this.name = "Player";
         this.echoCharges = 3; // Inicializar cargas de eco
+        this.followdistance = 500; // Inicializar cargas de eco
 
         this.keys = {}; // Objeto para manejar el estado de las teclas  
 
@@ -87,8 +88,8 @@ export class Player extends Entity2D {
 
                 // Activar el estado 'follow' en los peces cercanos
                 this.game.fishes.forEach(fish => {
-                    const distance = this.getDistance(fish.sprite);
-                    if (distance < 500) { // Cambia 150 por la distancia que consideres adecuada
+                    const distance = this.getDistanceTo(fish.sprite);
+                    if (distance < this.followdistance) { // Cambia 500 por la distancia que consideres adecuada
                         fish.activateFollow();
                         setTimeout(() => {
                             fish.deactivateFollow();
@@ -108,12 +109,24 @@ export class Player extends Entity2D {
     }
 
     // Método para obtener la distancia hasta otro sprite
-    getDistance(otherSprite) {
+    getDistanceTo(otherSprite) {
         const dx = this.sprite.x - otherSprite.x;
         const dy = this.sprite.y - otherSprite.y;
-        return Math.sqrt(dx * dx + dy * dy);
+        return Math.sqrt(dx ** 2 + dy ** 2);
     }
 
-
+    // Método para obtener la distancia aproximada hasta un punto
+    getApproximateDistanceTo(otherSprite) {
+        const dx = Math.abs(this.sprite.x - otherSprite.x);
+        const dy = Math.abs(this.sprite.y - otherSprite.y);
+        
+        // Determinar la distancia mayor y menor
+        const maxDistance = Math.max(dx, dy);
+        const minDistance = Math.min(dx, dy);
+        
+        // Aplicar la aproximación
+        return maxDistance * 0.7 + minDistance * 0.3;
+    }
+    
 
 }
