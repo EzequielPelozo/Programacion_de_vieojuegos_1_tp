@@ -157,16 +157,40 @@ export class Predator extends Entity2D {
     isBlockedByFishes(player, fishes) {
         for (let fish of fishes) {
             if (fish.state === 'follow') { // Verificar que el pez esté en estado follow
-                const distanceToFish = this.getDistanceTo(fish.sprite, player.sprite);
+                const distanceToFish = this.getApproximateDistanceTo(fish.sprite, player.sprite);
                 const distanceToShark = this.getDistanceTo(this.sprite, player.sprite);
     
                 // Si el pez está entre el tiburón y el jugador
-                if (distanceToFish < distanceToShark) {
+                if (distanceToFish < distanceToShark && this.isInLine(this.sprite, player.sprite, fish.sprite, 1000)) {
                     return true; // Bloquea al tiburón
                 }
             }
         }
         return false; // No hay peces bloqueando
+    }
+    
+    // Método para verificar si un pez está en la línea entre el depredador y el jugador
+    isInLine(predatorPosition, playerPosition, fishPosition, blockingDistance) {
+        const lineLength = this.getApproximateDistanceTo(predatorPosition, playerPosition);
+    
+        // Calcular proyección del pez sobre la línea del depredador al jugador
+        const dx = playerPosition.x - predatorPosition.x;
+        const dy = playerPosition.y - predatorPosition.y;
+    
+        // Proyección del pez sobre la línea
+        const projection = ((fishPosition.x - predatorPosition.x) * dx + (fishPosition.y - predatorPosition.y) * dy) / (lineLength ** 2);
+    
+        // Calcular el punto en la línea más cercano al pez
+        const closestPoint = new PIXI.Point(
+            predatorPosition.x + projection * dx,
+            predatorPosition.y + projection * dy
+        );
+    
+        // Calcular la distancia entre el pez y el punto más cercano en la línea
+        const distanceToLine = this.getApproximateDistanceTo(fishPosition, closestPoint);
+    
+        // Verificar si el pez está dentro del rango de bloqueo
+        return distanceToLine < blockingDistance * 0.5; // Ajustar según la tolerancia deseada
     }
 
     // Método para obtener la resultante de un vector
@@ -193,5 +217,4 @@ export class Predator extends Entity2D {
         // Aplicar la aproximación
         return maxDistance * 0.7 + minDistance * 0.3;
     }
-    
 }
