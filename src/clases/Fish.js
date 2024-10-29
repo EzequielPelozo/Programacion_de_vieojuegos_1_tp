@@ -27,7 +27,7 @@ export class Fish extends Entity2D {
             let alignmentForce = this.alignment(fishes);
             let cohesionForce = this.cohesion(fishes);
             const avoidanceForce = this.avoidPlayer(player);
-            
+
             this.acceleration.set(
                 separationForce.x + alignmentForce.x + cohesionForce.x + avoidanceForce.x,
                 separationForce.y + alignmentForce.y + cohesionForce.y + avoidanceForce.y
@@ -64,7 +64,7 @@ export class Fish extends Entity2D {
         let steer = new PIXI.Point(0, 0);
         const dx = this.sprite.x - player.sprite.x;
         const dy = this.sprite.y - player.sprite.y;
-        const distance = this.getDistanceTo(player.sprite)
+        const distance = this.getApproximateDistanceTo(player.sprite)
     
         const combinedRadii = (this.sprite.width / 2) + (player.sprite.width / 2); // Suma de los radios del Fish y el Player
     
@@ -106,7 +106,7 @@ export class Fish extends Entity2D {
     // Método para cambiar al estado follow
     followPlayer(player) {
         const targetPosition = new PIXI.Point(player.sprite.x, player.sprite.y);
-        const distance = this.getDistanceTo(targetPosition);
+        const distance = this.getApproximateDistanceTo(targetPosition);
         
         // Lógica para moverse hacia el jugador y alrededor de él
         if (distance > 50) { // Distancia mínima para acercarse
@@ -139,7 +139,7 @@ export class Fish extends Entity2D {
         for (let other of fishes) {
             let dx = this.sprite.x - other.sprite.x;
             let dy = this.sprite.y - other.sprite.y;
-            let distance = this.getDistanceTo(other.sprite);
+            let distance = this.getApproximateDistanceTo(other.sprite);
 
             if (other !== this && distance < 50) { // Distancia mínima de separación
                 const diff = new PIXI.Point(dx / distance, dy / distance);
