@@ -9,45 +9,91 @@ export class Predator extends Entity2D {
         this.acceleration = new PIXI.Point(0, 0);
         this.maxForce = 0.05; // Fuerza máxima que puede aplicar
         this.pushForce = 1;    // Fuerza de empuje al colisionar
+        this.state = 'wandering'; // Estado inicial
     }
 
     // Método que se llamará en cada frame
     update(delta, player, fishes) {
         if (!this.listo) return;
 
-
-        // Verifica si hay peces en estado follow entre el tiburón y el jugador
+        // Actualizar el estado según la presencia de peces en estado follow
         if (!this.isBlockedByFishes(player, fishes)) {
-
-            //se calcula la fuerza de atraccion
-            let cohesionForce = this.cohesion(player);
-
-            //se settea fuerza de atraccion como aceleracion
-            this.acceleration.set(
-                cohesionForce.x,
-                cohesionForce.y
-            );
-
-            // Aplicar la aceleración a la velocidad
-            this.velocity.x += this.acceleration.x;
-            this.velocity.y += this.acceleration.y;
-
-            // Limitar la velocidad máxima
-            const speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
-            if (speed > this.maxSpeed) {
-                this.velocity.x = (this.velocity.x / speed) * this.maxSpeed;
-                this.velocity.y = (this.velocity.y / speed) * this.maxSpeed;
-            }
-
-            // Mover usando la velocidad
-            this.sprite.x += this.velocity.x * delta.deltaTime;
-            this.sprite.y += this.velocity.y * delta.deltaTime;
-
-            // Actualizar la rotación en función de la dirección de la velocidad
-            this.sprite.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2; // Se Suma es para que "miren" hacia adelante
+            this.changeState('hunting');
+        } else {
+            this.changeState('wandering');
         }
+
+        // Ejecutar la lógica según el estado actual
+        if (this.state === 'hunting') {
+            this.huntPlayer(delta, player);
+        } else if (this.state === 'wandering') {
+            this.wander(delta);
+        }
+
         // Envuelve al enemigo alrededor de los bordes de la pantalla
         this.wrapAroundScreen();
+    }
+
+    // Cambia el estado del depredador
+    changeState(newState) {
+        if (this.state !== newState) {
+            this.state = newState;
+        }
+    }
+
+    // Lógica de caza hacia el jugador
+    huntPlayer(delta, player) {
+        // Calcula la fuerza de atracción hacia el jugador
+        let cohesionForce = this.cohesion(player);
+
+        // Configura la aceleración basada en la fuerza de cohesión
+        this.acceleration.set(
+            cohesionForce.x,
+            cohesionForce.y
+        );
+
+        // Aplica la aceleración a la velocidad
+        this.velocity.x += this.acceleration.x;
+        this.velocity.y += this.acceleration.y;
+
+        // Limitar la velocidad máxima
+        const speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+        if (speed > this.maxSpeed) {
+            this.velocity.x = (this.velocity.x / speed) * this.maxSpeed;
+            this.velocity.y = (this.velocity.y / speed) * this.maxSpeed;
+        }
+
+        // Mover usando la velocidad
+        this.sprite.x += this.velocity.x * delta.deltaTime;
+        this.sprite.y += this.velocity.y * delta.deltaTime;
+
+        // Actualizar la rotación en función de la dirección de la velocidad
+        this.sprite.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2;
+    }
+
+    // Lógica de movimiento aleatorio en estado wandering
+    wander(delta) {
+        this.acceleration.set(
+            Math.random() * 0.1 - 0.05,
+            Math.random() * 0.1 - 0.05
+        );
+
+        this.velocity.x += this.acceleration.x;
+        this.velocity.y += this.acceleration.y;
+
+        // Limitar la velocidad máxima
+        const speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+        if (speed > this.maxSpeed / 2) {
+            this.velocity.x = (this.velocity.x / speed) * (this.maxSpeed / 2);
+            this.velocity.y = (this.velocity.y / speed) * (this.maxSpeed / 2);
+        }
+
+        // Mover usando la velocidad
+        this.sprite.x += this.velocity.x * delta.deltaTime;
+        this.sprite.y += this.velocity.y * delta.deltaTime;
+
+        // Rotación aleatoria
+        this.sprite.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2;
     }
 
     //Mover hacia el centro de masa del jugador
@@ -64,7 +110,6 @@ export class Predator extends Entity2D {
         if (count > 0) {
             centerOfMass.x /= count;
             centerOfMass.y /= count;
-
             return this.seek(centerOfMass);
         }
 
@@ -108,6 +153,7 @@ export class Predator extends Entity2D {
         return vector;
     }
 
+    // Verifica si hay peces en estado follow entre el tiburón y el jugador
     isBlockedByFishes(player, fishes) {
         for (let fish of fishes) {
             if (fish.state === 'follow') { // Verificar que el pez esté en estado follow
