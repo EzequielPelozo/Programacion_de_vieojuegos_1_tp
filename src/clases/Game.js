@@ -43,7 +43,7 @@ export class Game {
 
         this.player = null;
         this.fishes = [];
-        this.fishCount = 600;
+        this.fishCount = 1000;
         this.echoCharges = 3; // Inicializar cargas de eco
         this.maxEchoCharges = 3; // Cargas máximas de eco
         this.echoTimer = 0; // Temporizador para recarga de eco
@@ -55,6 +55,7 @@ export class Game {
         this.heartImages = []; // Array para almacenar los corazones
         this.gameOver = false;
         this.framenum = 0;
+        this.lastTime = performance.now();
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -73,6 +74,7 @@ export class Game {
             addWaterOverlay(this);
             //le paso el contenedor para tener la interfaz y el juego en diferentes contenedores ya que si estan en el mismo afecta a la interfaz el filtro.
             addDisplacementEffect(this.app, this.mainContainer);
+
 
             // Instanciar el EcoPool 
             this.echoPool = new EchoPool(this, this.echoCharges);
@@ -116,11 +118,16 @@ export class Game {
     }
 
     gameLoop(time) {
+
+        if (this.framenum === 0) {this.showFPS();}
         
         this.framenum++;
 
-        // Actualizar el jugador        
-        this.player.update(time);
+        // Contador de FPS para validar performance
+        this.UpdateFPS();
+
+        // Actualizar el jugador     
+        this.player.update(time, this.gameOver);
 
         // Actualizar cada pez
         for (let fish of this.fishes) {
@@ -133,7 +140,9 @@ export class Game {
         }
 
         // Actualiza el depredador
-        this.predator.update(time, this.player, this.fishes);
+        if (!this.gameOver) {
+            this.predator.update(time, this.player, this.fishes);
+        }
 
         // Animar el overlay de agua
         animateWaterOverlay(this.app, time);
@@ -336,6 +345,27 @@ export class Game {
     updateEchoDisplay() {
         this.echoText.text = this.echoCharges.toString();
     }
+
+    showFPS() {
+        this.FPSText = new PIXI.Text();
+        this.FPSText.style.fontSize = '20px';
+        //this.FPSText.style.fontFamily = "PressStart2P-Regular";
+        this.FPSText.style.align = "center";
+        this.FPSText.x = 0;//window.innerWidth / 2 - this.FPSText.width / 2;
+        this.FPSText.y = window.innerHeight - this.FPSText.height;
+        this.FPSText.style.fill = "white";
+        this.FPSText.text = "FPS: ";
+        this.ui.addChild(this.FPSText);
+    }
+
+    UpdateFPS(){
+        let fpsCounter = 0;
+        const currentTime = performance.now();
+        fpsCounter = 1000 / (currentTime - this.lastTime);
+        this.lastTime = currentTime;
+        this.FPSText.text = 'FPS:' + Math.round(fpsCounter);
+    }
+
 
     createGameOver() {
         this.gameoverText = new PIXI.Text();

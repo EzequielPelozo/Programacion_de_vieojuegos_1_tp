@@ -7,7 +7,7 @@ export class Fish extends Entity2D {
         this.name = "Fish";
         this.velocity = new PIXI.Point(Math.random() * 2 - 1, Math.random() * 2 - 1); // Dirección inicial aleatoria
         this.acceleration = new PIXI.Point(0, 0);
-        //this.maxSpeed = 2;
+        this.maxSpeed = 10;
         this.maxForce = 0.05; // Fuerza máxima que puede aplicar
         this.neighborRadius = 100; // Radio para considerar a otros peces cercanos
         this.avoidRadius = 150;    // Radio de evitación para el Player
