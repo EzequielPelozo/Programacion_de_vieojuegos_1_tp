@@ -111,8 +111,6 @@ export class Game {
 
             if (this.echoCharges < this.maxEchoCharges) {
                 this.echoCharges++;
-                this.updateEchoDisplay();
-
             }
         }, 3000); // Cada 3 segundos
     }
@@ -125,6 +123,9 @@ export class Game {
 
         // Contador de FPS para validar performance
         this.UpdateFPS();
+
+        // Actualiza contador de Ecos
+        this.updateEchoDisplay();
 
         // Actualizar el jugador     
         this.player.update(time, this.gameOver);
@@ -363,7 +364,7 @@ export class Game {
         const currentTime = performance.now();
         fpsCounter = 1000 / (currentTime - this.lastTime);
         this.lastTime = currentTime;
-        this.FPSText.text = 'FPS:' + Math.round(fpsCounter);
+        this.FPSText.text = 'FPS:' + Math.round(fpsCounter).toString();
     }
 
 

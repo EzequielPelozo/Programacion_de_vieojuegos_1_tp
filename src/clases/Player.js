@@ -78,7 +78,7 @@ export class Player extends Entity2D {
             }
             if (this.keys['KeyM']) {
                 // Solo disparar si no se está disparando y tengo cargas
-                if (!this.isFiring && this.game.echoCharges > -1) {
+                if (!this.isFiring && this.game.echoCharges > 0) {
                     this.isFiring = true; // Marcar que se está disparando
 
                     this.game.echoCharges--; // Reducir cargas de eco
@@ -94,7 +94,7 @@ export class Player extends Entity2D {
                             fish.activateFollow();
                             setTimeout(() => {
                                 fish.deactivateFollow();
-                            }, 10000); // 10 segundos en milisegundos
+                            }, 7000); // 7 segundos en milisegundos
                         }
                     });
 
