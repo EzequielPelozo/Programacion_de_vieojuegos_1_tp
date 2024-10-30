@@ -40,6 +40,7 @@ export class Game {
         this.grid = new Grid(CELL_SIZE, this.width, this.height); // Inicializar la grilla
 
         this.mainContainer = new PIXI.Container();
+        this.ui = new PIXI.Container();
 
         this.player = null;
         this.fishes = [];
@@ -80,7 +81,7 @@ export class Game {
             this.echoPool = new EchoPool(this, this.echoCharges);
 
             // Cargo el Player 
-            this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this);
+            this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this,this.mainContainer);
 
             // Cargo Peces
             this.startFishes();
@@ -252,7 +253,6 @@ export class Game {
 
     //Creo el UI y lo agrego a un container diferente
     createUI() {
-        this.ui = new PIXI.Container();
         this.ui.name = "UI";
         this.app.stage.addChild(this.ui);
 

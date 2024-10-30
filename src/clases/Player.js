@@ -1,10 +1,12 @@
 import { Entity2D } from "./Entity2D";
+import * as PIXI from 'pixi.js';
 
 export class Player extends Entity2D {
-    constructor(x, y, image, game) {
+    constructor(x, y, image, game, mainContainer) {
 
         super(x, y, image, game);
-
+        
+        this.mainContainer = mainContainer;
         this.name = "Player";
         this.echoCharges = 3; // Inicializar cargas de eco
         this.followdistance = 500; // Inicializar cargas de eco
@@ -44,7 +46,6 @@ export class Player extends Entity2D {
         this.speed *= this.friction;
     }
 
-
     // Evento para cuando una tecla se presiona
     onKeyDown(event) {
         if (!this.listo) return;
@@ -62,53 +63,68 @@ export class Player extends Entity2D {
     }
 
     checkKeys(delta,gameOver) {
-        if (!gameOver) {   
-            // Controlar rotación y aceleración basado en las teclas presionadas
-            if (this.keys['KeyA']) {
-                this.sprite.rotation -= this.rotationSpeed * delta.deltaTime;
-            }
-            if (this.keys['KeyD']) {
-                this.sprite.rotation += this.rotationSpeed * delta.deltaTime;
-            }
-            if (this.keys['KeyW']) {
-                this.speed = Math.min(this.speed + this.acceleration, this.maxSpeed);
-            }
-            if (this.keys['KeyS']) {
-                this.speed = Math.max(this.speed - this.acceleration, 0); // Evitar velocidad negativa
-            }
-            if (this.keys['KeyM']) {
-                // Solo disparar si no se está disparando y tengo cargas
-                if (!this.isFiring && this.game.echoCharges > 0) {
-                    this.isFiring = true; // Marcar que se está disparando
-
-                    this.game.echoCharges--; // Reducir cargas de eco
-                    //this.updateEchoDisplay();
-                    const { x, y, rotation } = this.sprite;
-                    this.game.echoPool.getEcho(x, y, rotation); // Disparar el eco
+        if (!gameOver) {
+            this.handleRotation(delta);
+            this.handleAcceleration();
+            this.handleShooting();
+        }
+        this.handleRestart();
+    }
 
 
+    handleRotation(delta) {
+        if (this.keys['KeyA']) this.sprite.rotation -= this.rotationSpeed * delta.deltaTime;
+        if (this.keys['KeyD']) this.sprite.rotation += this.rotationSpeed * delta.deltaTime;
+    }
+    
+    handleAcceleration() {
+        if (this.keys['KeyW']) this.speed = Math.min(this.speed + this.acceleration, this.maxSpeed);
+        if (this.keys['KeyS']) this.speed = Math.max(this.speed - this.acceleration, 0);
+    }
+    
+    handleShooting(delta) {
+        if (this.keys['KeyM'] && !this.isFiring && this.game.echoCharges > 0) {
+            this.isFiring = true;
+            this.game.echoCharges--;
+            this.game.echoPool.getEcho(this.sprite.x, this.sprite.y, this.sprite.rotation);
+
+            this.createEchoWave(delta);  // Generar la onda expansiva
+            this.activateNearbyFish();
+        }
+    }
+    
+    handleRestart() {
+        if (this.keys['KeyR'] && this.game.gameOver) this.game.restartGame();
+    }
+
+
+    // Método para crear el efecto de onda expansiva
+    createEchoWave(delta) {
+        const wave = new PIXI.Graphics()
+        wave.circle(0, 0, this.followdistance)
+        wave.fill(0xFFFFFF,0.2);
+        wave.x = this.sprite.x;
+        wave.y = this.sprite.y;
+
+        this.mainContainer.addChild(wave);
+
+        setTimeout(() => {
+            this.mainContainer.removeChild(wave); // Elimina el gráfico después de 1 segundo (ajusta el tiempo si es necesario)
+        }, 1000);
+    }
+    
+    activateNearbyFish(){
                     // Activar el estado 'follow' en los peces cercanos
                     this.game.fishes.forEach(fish => {
                         const distance = this.getDistanceTo(fish.sprite);
-                        if (distance < this.followdistance) { // Cambia 500 por la distancia que consideres adecuada
+                        if (distance < this.followdistance) {
                             fish.activateFollow();
                             setTimeout(() => {
                                 fish.deactivateFollow();
                             }, 7000); // 7 segundos en milisegundos
                         }
                     });
-
                 }
-            }
-        }
-        //reiniciar el juego solo si esta finalizado
-        if (this.keys['KeyR']) {
-            if (this.game.gameOver) {
-                this.game.restartGame();
-            }
-
-        }
-    }
 
     // Método para obtener la distancia hasta otro sprite
     getDistanceTo(otherSprite) {
