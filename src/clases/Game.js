@@ -56,6 +56,7 @@ export class Game {
         this.heartImages = []; // Array para almacenar los corazones
         this.gameOver = false;
         this.framenum = 0;
+        this.fpsCounter = 0;
         this.lastTime = performance.now();
 
         let promise = this.app.init({ width: this.width, height: this.height });
@@ -100,27 +101,35 @@ export class Game {
         });
 
         // Llama a esta función para comenzar la recarga de eco
-        this.startEchoRecharge();
+        // this.startEchoRecharge();
 
         // Asignar la instancia actual a la propiedad estática
         Game.instance = this;
     }
 
-    // Método para iniciar la recarga de eco
+    // Método para iniciar la recarga de eco ACA SE PODRIA CAMBIAR EL SET INTERVAL POR CONTADOR  DE FRAMES - Hecho
     startEchoRecharge() {
-        setInterval(() => {
+        // setInterval(() => {
 
-            if (this.echoCharges < this.maxEchoCharges) {
-                this.echoCharges++;
-            }
-        }, 3000); // Cada 3 segundos
+        //     if (this.echoCharges < this.maxEchoCharges) {
+        //         this.echoCharges++;
+        //     }
+        // }, 3000); // Cada 3 segundos
+        if(this.framenum % 180 === 0 && this.echoCharges < this.maxEchoCharges) {
+            this.echoCharges++;
+        }
     }
 
     gameLoop(time) {
 
+        // console.log(time)
+
         if (this.framenum === 0) {this.showFPS();}
         
         this.framenum++;
+
+        // Llama a esta función para comenzar la recarga de eco
+        this.startEchoRecharge();
 
         // Contador de FPS para validar performance
         this.UpdateFPS();
@@ -360,11 +369,13 @@ export class Game {
     }
 
     UpdateFPS(){
-        let fpsCounter = 0;
+        // let fpsCounter = 0;
+        
         const currentTime = performance.now();
-        fpsCounter = 1000 / (currentTime - this.lastTime);
+        this.fpsCounter = 1000 / (currentTime - this.lastTime);
         this.lastTime = currentTime;
-        this.FPSText.text = 'FPS:' + Math.round(fpsCounter).toString();
+        // console.log(this.fpsCounter);
+        this.FPSText.text = 'FPS:' + Math.round(this.fpsCounter).toString();
     }
 
 
