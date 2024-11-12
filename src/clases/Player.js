@@ -50,7 +50,7 @@ export class Player extends Entity2D {
 
     onKeyUp(event) {
         this.keys[event.code] = false;
-        if (event.code === 'KeyM') {
+        if (event.code === 'KeyM' || event.code === 'Space') {
             this.isFiring = false;
         }
     }
@@ -75,7 +75,7 @@ export class Player extends Entity2D {
     }
 
     handleShooting(delta) {
-        if (this.keys['KeyM'] && !this.isFiring && this.game.echoCharges > 0) {
+        if ((this.keys['KeyM'] || this.keys['Space']) && !this.isFiring && this.game.echoCharges > 0) {
             this.isFiring = true;
             this.game.echoCharges--;
             this.game.echoPool.getEcho(this.sprite.x, this.sprite.y, this.sprite.rotation);
@@ -136,7 +136,7 @@ export class Player extends Entity2D {
             const distance = this.getDistanceTo(fish.sprite);
             if (distance < this.followdistance && !fish.isFollowing) {
                 fish.activateFollow();
-                this.activeFishes.push({ fish, startFrame: this.game.framenum, followFrames: 420 }); // 7 segundos en frames (420 a 60 FPS)
+                this.activeFishes.push({ fish, startFrame: this.game.framenum, followFrames: this.game.fpsCounter * 7 }); // 7 segundos en frames (AverageFPS * 7)
             }
         });
     }

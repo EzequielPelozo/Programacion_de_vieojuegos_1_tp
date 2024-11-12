@@ -58,6 +58,8 @@ export class Game {
         this.framenum = 0;
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.AverageFPS = 60;
+        this.ArrayLastFPS = []
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -122,7 +124,7 @@ export class Game {
 
     gameLoop(time) {
 
-        // console.log(time)
+        //console.log(time)
 
         if (this.framenum === 0) {this.showFPS();}
         
@@ -369,15 +371,12 @@ export class Game {
     }
 
     UpdateFPS(){
-        // let fpsCounter = 0;
-        
         const currentTime = performance.now();
         this.fpsCounter = 1000 / (currentTime - this.lastTime);
         this.lastTime = currentTime;
         // console.log(this.fpsCounter);
         this.FPSText.text = 'FPS:' + Math.round(this.fpsCounter).toString();
     }
-
 
     createGameOver() {
         this.gameoverText = new PIXI.Text();
