@@ -17,7 +17,7 @@ export class Grid {
 
     // Función para agregar un pez a la grilla
     addFish(fish) {
-        const index = this.getCellIndex(fish.sprite.x, fish.sprite.y);
+        const index = this.getCellIndex(fish.container.x, fish.container.y);
         if (!this.grid.has(index)) {
             this.grid.set(index, []);
         }
@@ -33,7 +33,7 @@ export class Grid {
     // Obtener los vecinos cercanos de una posición específica
     getNeighbors(fish) {
         const neighbors = [];
-        const index = this.getCellIndex(fish.sprite.x, fish.sprite.y);
+        const index = this.getCellIndex(fish.container.x, fish.container.y);
         const [cellX, cellY] = index.split(',').map(Number);
 
         // Verificar las celdas adyacentes (incluyendo la celda actual)

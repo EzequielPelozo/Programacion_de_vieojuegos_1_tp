@@ -17,14 +17,17 @@ export class Entity2D {
         this.sprite = null;
         this.scale = 0.2;
 
+        // Agregar el container al main container del juego
+        this.game.mainContainer.addChild(this.container);
+
         this.loadSprite(image);                             // cargar el sprite
        
     }
 
     SetStartPosition( x, y) {
          // Move the sprite to the screen position.
-         this.sprite.x = x;
-         this.sprite.y = y;
+         this.container.x = x;
+         this.container.y = y;
          // Cambiar la escala para que el sprite sea más pequeño
          this.sprite.scale.set(this.scale); // Aquí puedes ajustar el tamaño (0.5 es la mitad de su tamaño original)
     }
@@ -34,8 +37,11 @@ export class Entity2D {
         // Crear un sprite usando el alias de la image cargada 
         this.sprite = PIXI.Sprite.from(image);
 
+        // Añadir el sprite al container en vez del main container
+        this.container.addChild(this.sprite);
+
         // Add to main container. ¿deberia crear un container por sprite?
-        this.game.mainContainer.addChild(this.sprite);
+        //this.game.mainContainer.addChild(this.sprite);
 
         // Center the sprite's anchor point.
         this.sprite.anchor.set(0.5);  
@@ -61,8 +67,8 @@ export class Entity2D {
 
     // Método para verificar si el jugador está colisionando 
     isColliding(other) {
-        const dx = this.sprite.x - other.sprite.x;
-        const dy = this.sprite.y - other.sprite.y;
+        const dx = this.container.x - other.container.x;
+        const dy = this.container.y - other.container.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         // Colisión si la distancia es menor que la suma de los radios de ambos sprites
@@ -71,16 +77,16 @@ export class Entity2D {
 
     // Método para hacer que el sprite reaparezca al salir de la pantalla (pantalla envolvente)
     wrapAroundScreen() {
-        if (this.sprite.x < 0) {
-            this.sprite.x = this.game.width; 
-        } else if (this.sprite.x > this.game.width) {
-            this.sprite.x = 0;
+        if (this.container.x < 0) {
+            this.container.x = this.game.width; 
+        } else if (this.container.x > this.game.width) {
+            this.container.x = 0;
         }
 
-        if (this.sprite.y < 0) {
-            this.sprite.y = this.game.height;
-        } else if (this.sprite.y > this.game.height) {
-            this.sprite.y = 0;
+        if (this.container.y < 0) {
+            this.container.y = this.game.height;
+        } else if (this.container.y > this.game.height) {
+            this.container.y = 0;
         }
     }
 
@@ -92,13 +98,13 @@ export class Entity2D {
         const dx = Math.sin(this.sprite.rotation)          //* this.speed;  Direccion en Y  
 
         // Colisión con los bordes izquierdo o derecho
-        if (this.sprite.x <= 0 || this.sprite.x >= this.game.width) {
-            this.sprite.x -= dx * this.speed * time.deltaTime
+        if (this.container.x <= 0 || this.container.x >= this.game.width) {
+            this.container.x -= dx * this.speed * time.deltaTime
         }
 
         // Colisión con los bordes superior o inferior
-        if (this.sprite.y <= 0 || this.sprite.y >= this.game.height) {
-            this.sprite.y += dy * this.speed * time.deltaTime
+        if (this.container.y <= 0 || this.container.y >= this.game.height) {
+            this.container.y += dy * this.speed * time.deltaTime
         }
     }
 }

@@ -168,7 +168,7 @@ export class Game {
 
 
         // Chequear colisión con el depredador
-        if (this.checkCollideOfSprites(this.player, this.predator)) {
+        if (this.checkCollideOfContainers(this.player, this.predator)) {
             this.lives--; // Reducir vidas
             this.updateHeartDisplay(); // Actualizar visualización de vidas
             if (this.lives <= 0 && !this.gameOver) {
@@ -182,7 +182,7 @@ export class Game {
 
         //si colisionan se le aplica una desaceleracion a al predador y una velocidad = 0
         for (let echo of this.echoPool.echoes) {
-            if (this.checkCollideOfSprites(this.predator, echo)) {
+            if (this.checkCollideOfContainers(this.predator, echo)) {
                 this.predator.acceleration.set({ x: -2, y: -2 });
                 this.predator.velocity = ({ x: 0, y: 0 });
             }
@@ -201,8 +201,8 @@ export class Game {
 
 
     resetPlayerPosition() {
-        this.player.sprite.x = (this.app.screen.width / 2);
-        this.player.sprite.y = (this.app.screen.height / 2);
+        this.player.container.x = (this.app.screen.width / 2);
+        this.player.container.y = (this.app.screen.height / 2);
         this.player.x = (this.app.screen.width / 2);
         this.player.y = (this.app.screen.width / 2);
         this.resetTimer();
@@ -248,13 +248,13 @@ export class Game {
     }
 
     //Chequeo si colisionan dos entidades (aplica para el predador y el player, el predador y el echo, etc)
-    checkCollideOfSprites(entity1, entity2) {
+    checkCollideOfContainers(entity1, entity2) {
 
-        const rect1 = entity1.sprite.getBounds();
-        const rect2 = entity2.sprite.getBounds();
+        const rect1 = entity1.container.getBounds();
+        const rect2 = entity2.container.getBounds();
         //quiza se pueda optimizar mejor ya que hay veces que no se hace correctamente la colision
         return (
-            //divido el ancho y el alto a la mitad porque sino la "caja" de colision es muy grande y los sprites ni se tocan y lo toma como colision.
+            //divido el ancho y el alto a la mitad porque sino la "caja" de colision es muy grande y los container ni se tocan y lo toma como colision.
             rect1.x < rect2.x + (rect2.width / 2) &&
             rect1.x + (rect1.width / 2) > rect2.x &&
             rect1.y < rect2.y + (rect2.height / 2) &&

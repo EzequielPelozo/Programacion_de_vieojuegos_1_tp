@@ -26,14 +26,14 @@ export class Player extends Entity2D {
         this.bounceOnEdges(delta);
         this.checkKeys(delta, gameOver);
 
-        const dy = Math.cos(this.sprite.rotation);
-        const dx = Math.sin(this.sprite.rotation);
+        const dy = Math.cos(this.container.rotation);
+        const dx = Math.sin(this.container.rotation);
 
-        this.sprite.x += dx * this.speed * delta.deltaTime;
-        this.sprite.y -= dy * this.speed * delta.deltaTime;
+        this.container.x += dx * this.speed * delta.deltaTime;
+        this.container.y -= dy * this.speed * delta.deltaTime;
 
-        this.x = this.sprite.x;
-        this.y = this.sprite.y;
+        this.x = this.container.x;
+        this.y = this.container.y;
 
         this.speed *= this.friction;
 
@@ -65,8 +65,8 @@ export class Player extends Entity2D {
     }
 
     handleRotation(delta) {
-        if (this.keys['KeyA']) this.sprite.rotation -= this.rotationSpeed * delta.deltaTime;
-        if (this.keys['KeyD']) this.sprite.rotation += this.rotationSpeed * delta.deltaTime;
+        if (this.keys['KeyA']) this.container.rotation -= this.rotationSpeed * delta.deltaTime;
+        if (this.keys['KeyD']) this.container.rotation += this.rotationSpeed * delta.deltaTime;
     }
 
     handleAcceleration() {
@@ -78,7 +78,7 @@ export class Player extends Entity2D {
         if ((this.keys['KeyM'] || this.keys['Space']) && !this.isFiring && this.game.echoCharges > 0) {
             this.isFiring = true;
             this.game.echoCharges--;
-            this.game.echoPool.getEcho(this.sprite.x, this.sprite.y, this.sprite.rotation);
+            this.game.echoPool.getEcho(this.container.x, this.container.y, this.container.rotation);
 
             this.createEchoWave();  // Genera la onda expansiva
             this.activateNearbyFish();
@@ -95,8 +95,8 @@ export class Player extends Entity2D {
         wave.beginFill(0xFFFFFF, 0.2);
         wave.drawCircle(0, 0, this.followdistance);
         wave.endFill();
-        wave.x = this.sprite.x;
-        wave.y = this.sprite.y;
+        wave.x = this.container.x;
+        wave.y = this.container.y;
 
         // Define el número de frames de vida del eco
         wave.startFrame = this.game.framenum;
@@ -120,7 +120,7 @@ export class Player extends Entity2D {
 
     // activateNearbyFish() {
     //     this.game.fishes.forEach(fish => {
-    //         const distance = this.getDistanceTo(fish.sprite);
+    //         const distance = this.getDistanceTo(fish.Container);
     //         if (distance < this.followdistance) {
     //             fish.activateFollow();
     //             setTimeout(() => {
@@ -133,7 +133,7 @@ export class Player extends Entity2D {
     // Método para activar los peces cercanos
     activateNearbyFish() {
         this.game.fishes.forEach(fish => {
-            const distance = this.getDistanceTo(fish.sprite);
+            const distance = this.getDistanceTo(fish.container);
             if (distance < this.followdistance && !fish.isFollowing) {
                 fish.activateFollow();
                 this.activeFishes.push({ fish, startFrame: this.game.framenum, followFrames: this.game.fpsCounter * 7 }); // 7 segundos en frames (AverageFPS * 7)
@@ -153,15 +153,15 @@ export class Player extends Entity2D {
         });
     }
 
-    getDistanceTo(otherSprite) {
-        const dx = this.sprite.x - otherSprite.x;
-        const dy = this.sprite.y - otherSprite.y;
+    getDistanceTo(otherContainer) {
+        const dx = this.container.x - otherContainer.x;
+        const dy = this.container.y - otherContainer.y;
         return Math.sqrt(dx ** 2 + dy ** 2);
     }
 
-    getApproximateDistanceTo(otherSprite) {
-        const dx = Math.abs(this.sprite.x - otherSprite.x);
-        const dy = Math.abs(this.sprite.y - otherSprite.y);
+    getApproximateDistanceTo(otherContainer) {
+        const dx = Math.abs(this.container.x - otherContainer.x);
+        const dy = Math.abs(this.container.y - otherContainer.y);
 
         const maxDistance = Math.max(dx, dy);
         const minDistance = Math.min(dx, dy);

@@ -64,11 +64,11 @@ export class Predator extends Entity2D {
         }
 
         // Mover usando la velocidad
-        this.sprite.x += this.velocity.x * delta.deltaTime;
-        this.sprite.y += this.velocity.y * delta.deltaTime;
+        this.container.x += this.velocity.x * delta.deltaTime;
+        this.container.y += this.velocity.y * delta.deltaTime;
 
         // Actualizar la rotación en función de la dirección de la velocidad
-        this.sprite.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2;
+        this.container.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2;
     }
 
     // Lógica de movimiento aleatorio en estado wandering
@@ -89,11 +89,11 @@ export class Predator extends Entity2D {
         }
 
         // Mover usando la velocidad
-        this.sprite.x += this.velocity.x * delta.deltaTime;
-        this.sprite.y += this.velocity.y * delta.deltaTime;
+        this.container.x += this.velocity.x * delta.deltaTime;
+        this.container.y += this.velocity.y * delta.deltaTime;
 
         // Rotación aleatoria
-        this.sprite.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2;
+        this.container.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2;
     }
 
     //Mover hacia el centro de masa del jugador
@@ -102,8 +102,8 @@ export class Predator extends Entity2D {
         let count = 0;
 
         if (player !== this) {
-            centerOfMass.x += player.sprite.x;
-            centerOfMass.y += player.sprite.y;
+            centerOfMass.x += player.container.x;
+            centerOfMass.y += player.container.y;
             count++;
         }
 
@@ -119,8 +119,8 @@ export class Predator extends Entity2D {
     // Método para moverse hacia un objetivo
     seek(target) {
         let desired = new PIXI.Point(
-            target.x - this.sprite.x,
-            target.y - this.sprite.y
+            target.x - this.container.x,
+            target.y - this.container.y
         );
 
         desired = this.normalize(desired);
@@ -157,11 +157,11 @@ export class Predator extends Entity2D {
     isBlockedByFishes(player, fishes) {
         for (let fish of fishes) {
             if (fish.state === 'follow') { // Verificar que el pez esté en estado follow
-                const distanceToFish = this.getApproximateDistanceTo(fish.sprite, player.sprite);
-                const distanceToShark = this.getDistanceTo(this.sprite, player.sprite);
+                const distanceToFish = this.getApproximateDistanceTo(fish.container, player.container);
+                const distanceToShark = this.getDistanceTo(this.container, player.container);
     
                 // Si el pez está entre el tiburón y el jugador
-                if (distanceToFish < distanceToShark && this.isInLine(this.sprite, player.sprite, fish.sprite, 1000)) {
+                if (distanceToFish < distanceToShark && this.isInLine(this.container, player.container, fish.container, 1000)) {
                     return true; // Bloquea al tiburón
                 }
             }

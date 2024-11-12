@@ -14,15 +14,15 @@ export class Echocolocation extends Entity2D {
         if (!this.active) return;
 
         // Mover la bala hacia adelante en la dirección de la rotación
-        const velocityY = Math.cos(this.sprite.rotation) * this.speed;
-        const velocityX = Math.sin(this.sprite.rotation) * this.speed;
+        const velocityY = Math.cos(this.container.rotation) * this.speed;
+        const velocityX = Math.sin(this.container.rotation) * this.speed;
 
-        this.sprite.x += velocityX * delta.deltaTime;
-        this.sprite.y -= velocityY * delta.deltaTime;
+        this.container.x += velocityX * delta.deltaTime;
+        this.container.y -= velocityY * delta.deltaTime;
 
         // Si la bala sale de la pantalla, desactivarla
-        if (this.sprite.x < 0 || this.sprite.x > this.game.width ||
-            this.sprite.y < 0 || this.sprite.y > this.game.height) {
+        if (this.container.x < 0 || this.container.x > this.game.width ||
+            this.container.y < 0 || this.container.y > this.game.height) {
             this.deactivate();
         } 
         
@@ -41,13 +41,13 @@ export class Echocolocation extends Entity2D {
     }
 
     // Verificar si la bala está colisionando con el asteroide
-    isColliding(asteroid) {
-        const dx = this.sprite.x - asteroid.sprite.x;
-        const dy = this.sprite.y - asteroid.sprite.y;
+    isColliding(otherContainer) {
+        const dx = this.container.x - otherContainer.container.x;
+        const dy = this.container.y - otherContainer.container.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         // Colisión si la distancia es menor que la suma de los radios
-        return distance < (this.radius + asteroid.radius);
+        return distance < (this.radius + otherContainer.radius);
     }
 
         // Método para activar la bala y dispararla
@@ -60,17 +60,17 @@ export class Echocolocation extends Entity2D {
             this.y = y;
             this.rotation = rotation;
     
-            this.sprite.x = x;
-            this.sprite.y = y;
-            this.sprite.rotation = rotation;
+            this.container.x = x;
+            this.container.y = y;
+            this.container .rotation = rotation;
     
             this.active = true;
-            this.sprite.visible = true;  // Mostrar el eco
+            this.container.visible = true;  // Mostrar el eco
         }
     
         // Método para desactivar eco
         deactivate() {
             this.active = false;
-            this.sprite.visible = false;  // Ocultar el eco
+            this.container.visible = false;  // Ocultar el eco
         }
 }
