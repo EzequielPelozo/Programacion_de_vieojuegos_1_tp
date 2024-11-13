@@ -1,6 +1,12 @@
 import { Entity2D } from "./Entity2D";
 import * as PIXI from 'pixi.js';
 
+import playerFrame0 from '../sprites/dolphin/dolphin-0.png';  // Usa la ruta relativa
+import playerFrame1 from '../sprites/dolphin/dolphin-1.png';
+import playerFrame2 from '../sprites/dolphin/dolphin-2.png';
+
+import PlayerEating from '../sprites/dolphin/dolphin-eating.png';
+
 export class Player extends Entity2D {
     constructor(x, y, image, game, mainContainer) {
         super(x, y, image, game);
@@ -13,6 +19,30 @@ export class Player extends Entity2D {
         this.isFiring = false;
         this.echoes = []; // Array para almacenar las ondas activas
         this.activeFishes = []; // Array para peces activados con su tiempo de activación
+
+        this.eatingTexture = PIXI.Texture.from(PlayerEating); // Imagen para el estado "comiendo" (o cualquier otro)
+
+        // Crear AnimatedSprite para la animación
+        this.animatedTexture = new PIXI.AnimatedSprite([
+            PIXI.Texture.from(playerFrame0),
+            PIXI.Texture.from(playerFrame1),
+            PIXI.Texture.from(playerFrame2),
+        ]);
+
+        // Configuración de la animación
+        this.animatedTexture.animationSpeed = 0.1;
+        this.animatedTexture.loop = true;
+        this.animatedTexture.visible = false;
+
+        this.playerAnimation = this.animatedTexture;
+        this.playerAnimation.play();  
+
+        this.playerAnimation.scale = this.sprite.scale;
+        this.playerAnimation.anchor.set(0.5);  
+
+        this.playerAnimation.x = this.sprite.x;
+        this.playerAnimation.y = this.sprite.y;
+        this.container.addChild(this.playerAnimation);
 
         window.addEventListener('keydown', this.onKeyDown.bind(this));
         window.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -76,12 +106,23 @@ export class Player extends Entity2D {
 
     handleShooting(delta) {
         if ((this.keys['KeyM'] || this.keys['Space']) && !this.isFiring && this.game.echoCharges > 0) {
+
+            this.playerAnimation.visible = false;
+            this.sprite.visible = true;
+            
+            //textura de comer
+            this.sprite.texture = this.eatingTexture;
             this.isFiring = true;
             this.game.echoCharges--;
             this.game.echoPool.getEcho(this.container.x, this.container.y, this.container.rotation);
 
             this.createEchoWave();  // Genera la onda expansiva
             this.activateNearbyFish();
+        } else if (!this.isFiring) {
+
+            this.sprite.visible = false;
+            this.playerAnimation.visible = true; 
+
         }
     }
 

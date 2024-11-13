@@ -10,10 +10,21 @@ import { Predator } from './Predator.js';
 import { Grid } from './Grid.js';
 
 // Imagenes
-import backgroundImage from '../sprites/sea_background_1.png';     // Usa la ruta relativa
+import backgroundImage from '../sprites/sea_background.png';     // Usa la ruta relativa
 import waveOverlay from '../sprites/wave_overlay.png';         // Usa la ruta relativa
 import displacementMap from '../sprites/displacement_map.png';     // Usa la ruta relativa
-import PlayerImage from '../sprites/dopphin_top_view_ph.png';  // Usa la ruta relativa
+import PlayerImage from '../sprites/dolphin/dolphin-0.png';  // Usa la ruta relativa
+
+//frames para animaciones
+import PlayerEating from '../sprites/dolphin/dolphin-eating.png';
+
+import PlayerFrame1 from '../sprites/dolphin/dolphin-1.png';
+import PlayerFrame2 from '../sprites/dolphin/dolphin-2.png';
+
+import FishFrame1 from '../sprites/fish/fish-1.png';
+import FishFrame2 from '../sprites/fish/fish-2.png';
+
+
 import FishImage from '../sprites/fish_1_ph.png';            // Usa la ruta relativa
 import Echo from '../sprites/echolocation.png';         // Usa la ruta relativa
 import SharkImage from '../sprites/shark-tv.png';             // Usa la ruta relativa
@@ -84,7 +95,7 @@ export class Game {
             this.echoPool = new EchoPool(this, this.echoCharges);
 
             // Cargo el Player 
-            this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this,this.mainContainer);
+            this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this, this.mainContainer);
 
             // Cargo Peces
             this.startFishes();
@@ -117,7 +128,7 @@ export class Game {
         //         this.echoCharges++;
         //     }
         // }, 3000); // Cada 3 segundos
-        if(this.framenum % 180 === 0 && this.echoCharges < this.maxEchoCharges) {
+        if (this.framenum % 180 === 0 && this.echoCharges < this.maxEchoCharges) {
             this.echoCharges++;
         }
     }
@@ -126,8 +137,8 @@ export class Game {
 
         //console.log(time)
 
-        if (this.framenum === 0) {this.showFPS();}
-        
+        if (this.framenum === 0) { this.showFPS(); }
+
         this.framenum++;
 
         // Llama a esta función para comenzar la recarga de eco
@@ -146,7 +157,7 @@ export class Game {
         for (let fish of this.fishes) {
             fish.update(time, this.fishes, this.player, this.framenum);
         }
-        
+
         // Solo actualizar la grilla cada 2 frames
         if (this.framenum % 2 === 0) {
             this.grid.updateGrid(this.fishes);
@@ -215,6 +226,11 @@ export class Game {
             { alias: 'displacement', src: displacementMap },
             { alias: 'fish', src: FishImage },
             { alias: 'player', src: PlayerImage },
+            { alias: 'player-frame-1', src: PlayerFrame1 },
+            { alias: 'player-frame-2', src: PlayerFrame2 },
+            { alias: 'fish-frame-1', src: FishFrame1 },
+            { alias: 'fish-frame-2', src: FishFrame2 },
+            { alias: 'player_eating', src: PlayerEating },
             { alias: 'echo', src: Echo },
             { alias: 'shark', src: SharkImage },
             { alias: 'heart_full', src: HeartFullImage }, // Cargar la imagen de corazones
@@ -370,7 +386,7 @@ export class Game {
         this.ui.addChild(this.FPSText);
     }
 
-    UpdateFPS(){
+    UpdateFPS() {
         const currentTime = performance.now();
         this.fpsCounter = 1000 / (currentTime - this.lastTime);
         this.lastTime = currentTime;
