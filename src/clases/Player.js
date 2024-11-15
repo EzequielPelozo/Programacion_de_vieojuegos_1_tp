@@ -27,6 +27,7 @@ export class Player extends Entity2D {
             PIXI.Texture.from(playerFrame0),
             PIXI.Texture.from(playerFrame1),
             PIXI.Texture.from(playerFrame2),
+            PIXI.Texture.from(playerFrame1)
         ]);
 
         // Configuración de la animación
@@ -70,6 +71,8 @@ export class Player extends Entity2D {
         // Actualiza el tiempo de vida de las ondas y los peces activados
         this.updateEchoes();
         this.updateActiveFishes();
+        //Chequea la velocidad del jugador y cambia la velocidad de animacion 
+        this.checkSpeedAndChangeAnimationSpeed();
 
     }
 
@@ -208,5 +211,16 @@ export class Player extends Entity2D {
         const minDistance = Math.min(dx, dy);
 
         return maxDistance * 0.7 + minDistance * 0.3;
+    }
+
+    checkSpeedAndChangeAnimationSpeed(){
+
+        if(this.speed > 6 && this.speed < 10 ){
+            this.animatedTexture.animationSpeed = 0.25;
+        }else if(this.speed > 2 && this.speed < 6){
+            this.animatedTexture.animationSpeed = 0.15;
+        }else{
+            this.animatedTexture.animationSpeed = 0.1;
+        }
     }
 }
