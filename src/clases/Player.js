@@ -61,8 +61,12 @@ export class Player extends Entity2D {
         // Verificar colisión con peces
         const collidedFish = this.game.fishes.find(fish => this.checkCollisionWithFish(fish));
 
-        if (this.keys['KeyE'] && collidedFish) {
+        if (/*this.keys['KeyE'] &&*/ collidedFish) {
             this.eatFish(collidedFish); // Lógica para comer al pez
+            //textura de comer
+            this.playerAnimation.visible = false;
+            this.sprite.visible = true;
+            this.sprite.texture = this.eatingTexture;
         }
 
         const dy = Math.cos(this.container.rotation);
