@@ -100,7 +100,7 @@ export class Game {
             this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this, this.mainContainer);
 
             // Cargo Peces
-            this.startFishes();
+            this.startFishes(this.fishCount-this.fishes-length);
 
             //Cargo predator
             this.predator = new Predator(Math.random() * this.width, Math.random() * this.height, 'shark', this)
@@ -204,6 +204,12 @@ export class Game {
         this.fishesCountText = this.fishes.length;
         this.capturedFishesText.text = this.fishesCountText;
 
+        //Condición de Victoria
+        if (this.fishes.length === 0 && !this.gameOver)  {
+            console.log('You Win'); // Placeholder para lógica de fin de juego
+            this.createWin();
+        }
+
         //si no tiene mas vidas, no actualizo el tiempo
         if (this.startTime === 0) {
             this.startTime = this.app.ticker.lastTime; // Guarda el tiempo de inicio
@@ -235,7 +241,7 @@ export class Game {
         this.player.container.y = (this.app.screen.height / 2);
         this.player.x = (this.app.screen.width / 2);
         this.player.y = (this.app.screen.width / 2);
-        this.resetTimer();
+        //this.resetTimer();
     }
 
     async preload() {
@@ -261,8 +267,8 @@ export class Game {
         await PIXI.Assets.load(assets);
     }
 
-    startFishes() {
-        for (let i = 0; i < this.fishCount; i++) {
+    startFishes(quantity) {
+        for (let i = 0; i < quantity; i++) {
             const fish = new Fish(Math.random() * this.width, Math.random() * this.height, 'fish', this);
             this.fishes.push(fish);
         }
@@ -442,13 +448,26 @@ export class Game {
         this.ui.addChild(this.gameoverText);
     }
 
+    createWin() {
+        this.WinText = new PIXI.Text();
+        this.WinText.text = "YOU WIN\n press `R` to restart";
+        this.WinText.style.fontSize = '60px'
+        this.WinText.style.fontFamily = "PressStart2P-Regular";
+        this.WinText.style.align = "center";
+        this.WinText.x = window.innerWidth / 2 - this.WinText.width / 2;
+        this.WinText.y = window.innerHeight / 2 - this.WinText.height / 2;
+        this.WinText.style.fill = "white";
+        this.gameOver = true;
+        this.ui.addChild(this.WinText);
+    }
+
     restartGame() {
-        this.gameOver = false;
-     
+        this.gameOver = false;     
         this.ui.removeChildAt((this.ui.children.length - 1));
         this.resetTimer();
         this.lives = 3;
         this.updateHeartDisplay();
         this.predator.SetStartPosition(Math.random() * this.width, Math.random() * this.height)
+        this.startFishes(this.fishCount-this.fishes-length);
     }
 }
