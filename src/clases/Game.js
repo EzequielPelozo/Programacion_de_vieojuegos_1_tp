@@ -55,6 +55,8 @@ export class Game {
 
         this.player = null;
         this.fishes = [];
+
+        this.fishesCountText = 0;
         this.fishCount = 1000;
         this.echoCharges = 3; // Inicializar cargas de eco
         this.maxEchoCharges = 3; // Cargas máximas de eco
@@ -62,7 +64,7 @@ export class Game {
         this.predator = null;
         this.timeText = null;
         this.startTime = 0; // Tiempo de inicio
-        this.totalSeconds = 0; // Tiempo total en segundos
+        this.totalSeconds = 60; // Tiempo total en segundos
         this.lives = 3; // Inicializar las vidas
         this.heartImages = []; // Array para almacenar los corazones
         this.gameOver = false;
@@ -71,7 +73,6 @@ export class Game {
         this.lastTime = performance.now();
         this.AverageFPS = 60;
         this.ArrayLastFPS = []
-        this.score = 0;
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
@@ -200,17 +201,34 @@ export class Game {
             }
         }
 
-        //si no tiene mas vidas, no actualizo el tiempo
-        if (this.lives > 0) {
-            if (this.startTime === 0) {
-                this.startTime = this.app.ticker.lastTime; // Guarda el tiempo inicial
-            }
+        this.fishesCountText = this.fishes.length;
+        this.capturedFishesText.text = this.fishesCountText;
 
-            this.totalSeconds = Math.floor((this.app.ticker.lastTime - this.startTime) / 1000);
-            this.timeText.text = this.formatTime(this.totalSeconds);
+        //si no tiene mas vidas, no actualizo el tiempo
+        if (this.startTime === 0) {
+            this.startTime = this.app.ticker.lastTime; // Guarda el tiempo de inicio
+            this.totalTime = 300; // 60 segundos para el temporizador (1 minuto)
+        }
+
+        // Calcula el tiempo transcurrido desde el inicio
+        let elapsedTime = (this.app.ticker.lastTime - this.startTime) / 1000; // Tiempo en segundos
+
+        // Calcula el tiempo restante
+        let remainingTime = this.totalTime - Math.floor(elapsedTime);
+
+        // Si el tiempo restante es mayor o igual a 0, actualiza el temporizador
+        if (remainingTime >= 0) {
+            this.timeText.text = this.formatTime(remainingTime); // Actualiza el texto del temporizador
+        } else {
+            this.timeText.text = '00:00'; // Si el tiempo se acaba, muestra 00:00
+            
+            if (!this.gameOver) {
+                // Lógica para terminar el juego o reiniciar
+                console.log('Game Over'); // Placeholder para lógica de fin de juego
+                this.createGameOver();
+            }
         }
     }
-
 
     resetPlayerPosition() {
         this.player.container.x = (this.app.screen.width / 2);
@@ -287,11 +305,13 @@ export class Game {
         this.createTimeText();
         this.createHearts(); // Mover la carga de corazones aquí
         this.createEchoCounter(); // Crear el contador de eco
+
+        this.createCapturedFishesText();
     }
 
     createTimeText() {
         this.timeText = new PIXI.Text();
-        this.timeText.text = "00:00";
+        this.timeText.text = "01:00";
         this.timeText.style.fontSize = '40px'
         this.timeText.style.fontFamily = "PressStart2P-Regular";
         this.timeText.style.align = "center";
@@ -299,6 +319,20 @@ export class Game {
         this.timeText.y = 30;
         this.timeText.style.fill = "white";
         this.ui.addChild(this.timeText);
+    }
+
+    createCapturedFishesText() {
+
+        this.fishesCountText = this.fishes.length;
+        this.capturedFishesText = new PIXI.Text();
+        this.capturedFishesText.text = this.fishesCountText;
+        this.capturedFishesText.style.fontSize = '40px'
+        this.capturedFishesText.style.fontFamily = "PressStart2P-Regular";
+        this.capturedFishesText.style.align = "center";
+        this.capturedFishesText.x = (window.innerWidth / 2 - this.capturedFishesText.width / 2) - 200;
+        this.capturedFishesText.y = 30;
+        this.capturedFishesText.style.fill = "white";
+        this.ui.addChild(this.capturedFishesText);
     }
 
     formatTime(seconds) {
@@ -404,13 +438,13 @@ export class Game {
         this.gameoverText.x = window.innerWidth / 2 - this.gameoverText.width / 2;
         this.gameoverText.y = window.innerHeight / 2 - this.gameoverText.height / 2;
         this.gameoverText.style.fill = "white";
-        this.timeText.text = "00:00";
         this.gameOver = true;
         this.ui.addChild(this.gameoverText);
     }
 
     restartGame() {
         this.gameOver = false;
+     
         this.ui.removeChildAt((this.ui.children.length - 1));
         this.resetTimer();
         this.lives = 3;

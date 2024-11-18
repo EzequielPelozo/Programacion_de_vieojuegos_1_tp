@@ -252,6 +252,5 @@ export class Player extends Entity2D {
     
         // Sumar puntos y log adicional
         this.game.score += 10;
-        console.log(`¡Te comiste un pez! Puntos: ${this.game.score}`);
     }
 }

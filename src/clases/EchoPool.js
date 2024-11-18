@@ -8,7 +8,7 @@ export class EchoPool {
 
         // Crear el pool de ecos
         for (let i = 0; i < poolSize; i++) {
-            const echo = new Echocolocation(0, 0, 'echo', this.game)
+            const echo = new Echocolocation(-10, -10, 'echo', this.game)
             this.echoes.push(echo);
         }
     }
