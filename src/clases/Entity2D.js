@@ -94,8 +94,8 @@ export class Entity2D {
     bounceOnEdges(time) {
 
         // Calcular el desplazamiento en los ejes X e Y basado en la velocidad y rotación
-        const dy = Math.cos(this.sprite.rotation)          //* this.speed;  Direccion en X
-        const dx = Math.sin(this.sprite.rotation)          //* this.speed;  Direccion en Y  
+        const dy = Math.cos(this.container.rotation)          //* this.speed;  Direccion en X
+        const dx = Math.sin(this.container.rotation)          //* this.speed;  Direccion en Y  
 
         // Colisión con los bordes izquierdo o derecho
         if (this.container.x <= 0 || this.container.x >= this.game.width) {

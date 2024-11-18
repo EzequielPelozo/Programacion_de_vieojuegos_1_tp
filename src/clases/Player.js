@@ -57,6 +57,14 @@ export class Player extends Entity2D {
         this.bounceOnEdges(delta);
         this.checkKeys(delta, gameOver);
 
+
+        // Verificar colisión con peces
+        const collidedFish = this.game.fishes.find(fish => this.checkCollisionWithFish(fish));
+
+        if (this.keys['KeyE'] && collidedFish) {
+            this.eatFish(collidedFish); // Lógica para comer al pez
+        }
+
         const dy = Math.cos(this.container.rotation);
         const dx = Math.sin(this.container.rotation);
 
@@ -222,5 +230,28 @@ export class Player extends Entity2D {
         }else{
             this.animatedTexture.animationSpeed = 0.1;
         }
+    }
+
+    checkCollisionWithFish(fish) {
+        const dx = this.container.x - fish.container.x; // Usar container en lugar de sprite
+        const dy = this.container.y - fish.container.y;
+        const distance = Math.sqrt(dx ** 2 + dy ** 2);
+    
+        return distance < (this.sprite.width / 2 + fish.sprite.width / 2+10); // Verifica radio de colisión
+    }
+    
+    eatFish(fish) {
+        // Remueve el pez de la lista de peces
+        const index = this.game.fishes.indexOf(fish);
+        if (index !== -1) {
+            this.game.fishes.splice(index, 1);
+        }
+    
+        // Remueve el pez del contenedor principal
+        this.mainContainer.removeChild(fish.container);
+    
+        // Sumar puntos y log adicional
+        this.game.score += 10;
+        console.log(`¡Te comiste un pez! Puntos: ${this.game.score}`);
     }
 }

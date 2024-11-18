@@ -71,6 +71,7 @@ export class Game {
         this.lastTime = performance.now();
         this.AverageFPS = 60;
         this.ArrayLastFPS = []
+        this.score = 0;
 
         let promise = this.app.init({ width: this.width, height: this.height });
 
