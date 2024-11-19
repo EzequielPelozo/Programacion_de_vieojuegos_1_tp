@@ -60,8 +60,10 @@ export class Game {
         this.fishCount = 1000;
         this.echoCharges = 3; // Inicializar cargas de eco
         this.maxEchoCharges = 3; // Cargas máximas de eco
+        this.EchoPoolSize = 15
         this.echoTimer = 0; // Temporizador para recarga de eco
-        this.predator = null;
+        this.predatorsQuantity = 2;
+        this.predators = [];
         this.timeText = null;
         this.startTime = 0; // Tiempo de inicio
         this.totalSeconds = 60; // Tiempo total en segundos
@@ -94,16 +96,17 @@ export class Game {
 
 
             // Instanciar el EcoPool 
-            this.echoPool = new EchoPool(this, this.echoCharges);
+            this.echoPool = new EchoPool(this, this.EchoPoolSize);
 
             // Cargo el Player 
             this.player = new Player(this.app.screen.width / 2, this.app.screen.height / 2, 'player', this, this.mainContainer);
 
+            // Cargo Tiburones
+            this.startPredators(this.predatorsQuantity);
+
             // Cargo Peces
             this.startFishes(this.fishCount-this.fishes-length);
 
-            //Cargo predator
-            this.predator = new Predator(Math.random() * this.width, Math.random() * this.height, 'shark', this)
 
             //Cargo el timer al final para que este en la ultima capa
             this.createUI();
@@ -167,7 +170,9 @@ export class Game {
 
         // Actualiza el depredador
         if (!this.gameOver) {
-            this.predator.update(time, this.player, this.fishes);
+            for (let preda of this.predators) {
+                preda.update(time, this.player, this.fishes);
+            }
         }
 
         // Animar el overlay de agua
@@ -181,23 +186,25 @@ export class Game {
 
 
         // Chequear colisión con el depredador
-        if (this.checkCollideOfContainers(this.player, this.predator)) {
-            this.lives--; // Reducir vidas
-            this.updateHeartDisplay(); // Actualizar visualización de vidas
-            if (this.lives <= 0 && !this.gameOver) {
-                // Lógica para terminar el juego o reiniciar
-                console.log('Game Over'); // Placeholder para lógica de fin de juego
-                this.createGameOver();
-            } else {
-                this.resetPlayerPosition(); // Resetear posición del jugador
+        for (let preda of this.predators) {
+            if (this.checkCollideOfContainers(this.player, preda)) {
+                this.lives--; // Reducir vidas
+                this.updateHeartDisplay(); // Actualizar visualización de vidas
+                if (this.lives <= 0 && !this.gameOver) {
+                    // Lógica para terminar el juego o reiniciar
+                    console.log('Game Over'); // Placeholder para lógica de fin de juego
+                    this.createGameOver();
+                } else {
+                    this.resetPlayerPosition(); // Resetear posición del jugador
+                }
             }
-        }
 
-        //si colisionan se le aplica una desaceleracion a al predador y una velocidad = 0
-        for (let echo of this.echoPool.echoes) {
-            if (this.checkCollideOfContainers(this.predator, echo)) {
-                this.predator.acceleration.set({ x: -2, y: -2 });
-                this.predator.velocity = ({ x: 0, y: 0 });
+            //si colisionan se le aplica una desaceleracion a al predador y una velocidad = 0
+            for (let echo of this.echoPool.echoes) {
+                if (this.checkCollideOfContainers(preda, echo)) {
+                    preda.acceleration.set({ x: -2, y: -2 });
+                    preda.velocity = ({ x: 0, y: 0 });
+                }
             }
         }
 
@@ -265,6 +272,14 @@ export class Game {
 
         // Usamos `PIXI.Assets.load` para cargar todos los recursos
         await PIXI.Assets.load(assets);
+    }
+
+    
+    startPredators(quantity) {
+        for (let i = 0; i < quantity; i++) {
+            const predator = new Predator(Math.random() * this.width, Math.random() * this.height, 'shark', this)
+            this.predators.push(predator);
+        }
     }
 
     startFishes(quantity) {
@@ -467,7 +482,9 @@ export class Game {
         this.resetTimer();
         this.lives = 3;
         this.updateHeartDisplay();
-        this.predator.SetStartPosition(Math.random() * this.width, Math.random() * this.height)
+        for (let preda of this.predators) {
+            preda.SetStartPosition(Math.random() * this.width, Math.random() * this.height)
+        }
         this.startFishes(this.fishCount-this.fishes-length);
     }
 }
